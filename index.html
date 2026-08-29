@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Build AU — Referral Urgency + Internal Re-referrals</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root{
+  --ink:#1d1d1f; --ink-med:#4a4a4c; --ink-light:#86868b; --ink-faint:#aeaeb2;
+  --bg:#f5f5f7; --card:#ffffff; --card-hover:#fcfcfd;
+  --border:#e5e5ea; --border-light:#f0f0f2;
+  --positive:#34c759; --positive-bg:#eafaf0; --positive-text:#1a7a32;
+  --negative:#ff3b30; --negative-bg:#fdeceb; --negative-text:#b81d14;
+  --warning:#ff9500; --warning-bg:#fff4e5; --warning-text:#8a5d00;
+  --neutral-bg:#f2f2f7;
+  --blue:#1a4e8a; --link:#1a6fa0;
+  /* Round accent — deliberately not green. Green is reserved for done / supported. */
+  --round:#5b4bc4; --round-soft:#ece9fa; --round-ink:#463aa8;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.08),0 2px 8px rgba(0,0,0,0.04);
+  --radius:12px; --radius-sm:8px; --sidebar-w:56px; --brand:#8cc63e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--ink);
+  line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+
+/* ---------- shell ---------- */
+.brand-rule{position:fixed;top:0;left:0;right:0;height:3px;background:var(--brand);z-index:80}
+.sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;padding:15px 0 12px;position:fixed;top:0;left:0;bottom:0;z-index:60}
+.sidebar-nav{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;margin-top:44px}
+.sidebar-item{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:none;background:none;position:relative;transition:all .15s}
+.sidebar-item svg{width:19px;height:19px;fill:var(--ink-faint);transition:fill .15s}
+.sidebar-item:hover{background:var(--neutral-bg)}
+.sidebar-item:hover svg{fill:var(--ink-med)}
+.sidebar-item.active{background:#eef4e8}
+.sidebar-item.active svg{fill:#4e7a1e}
+.sidebar-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--brand)}
+.sidebar-bottom{display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:4px}
+.sidebar-divider{width:28px;height:1px;background:var(--border);margin:8px 0}
+
+.main-area{flex:1;margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:3px;z-index:50}
+.logo{font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.3px;display:flex;align-items:center;gap:7px}
+.logo .mark{width:15px;height:15px;background:var(--ink);border-radius:2px;display:inline-flex;align-items:center;justify-content:center}
+.logo .mark svg{width:10px;height:10px;fill:#fff}
+.logo em{font-style:normal;font-weight:600;color:var(--brand);letter-spacing:.2px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-icon{position:relative;width:20px;height:20px}
+.topbar-icon svg{width:18px;height:18px;fill:var(--ink-faint)}
+.topbar-icon .pip{position:absolute;top:-1px;right:-1px;width:6px;height:6px;border-radius:50%;background:var(--negative)}
+.avatar-sm{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#a855c7,#8b3fa8);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+.user-name{font-size:13px;color:var(--ink-med);font-weight:500}
+
+.body-row{display:flex;flex:1;align-items:flex-start}
+.page{flex:1;padding:22px 30px 90px;min-width:0;max-width:1560px}
+.crumb{font-size:11px;color:var(--ink-light);margin-bottom:10px}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.page-title{font-size:19px;font-weight:600;letter-spacing:-.4px;display:flex;align-items:center;gap:8px}
+.page-title .back{width:16px;height:16px;fill:var(--ink-light)}
+.page-sub{font-size:12px;color:var(--ink-light);margin-top:2px}
+
+/* ---------- concept control bar (prototype chrome) ---------- */
+.ctrl{background:#232326;color:#fff;position:sticky;top:55px;z-index:49;padding:9px 30px;
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;font-size:11px;border-bottom:1px solid #35353a}
+.ctrl-tag{font-weight:700;letter-spacing:.6px;text-transform:uppercase;font-size:9px;color:#8e8e93;
+  border:1px solid #48484d;padding:2px 6px;border-radius:4px}
+.ctrl-group{display:flex;align-items:center;gap:7px}
+.ctrl-label{color:#98989d;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.seg{display:flex;background:#38383c;border-radius:6px;padding:2px;gap:2px}
+.seg button{border:none;background:none;color:#c7c7cc;font:inherit;font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif;white-space:nowrap}
+.seg button.on{background:#fff;color:#1d1d1f;font-weight:600}
+.ctrl-note{color:#8e8e93;font-size:10px;max-width:360px;line-height:1.4}
+.ctrl-key{border:1px solid #48484d;background:none;color:#c7c7cc;font:inherit;font-size:11px;font-weight:600;
+  padding:3px 11px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;margin-left:auto}
+.ctrl-key.on{background:#fff;color:#1d1d1f;border-color:#fff}
+.hidden{display:none!important}
+
+/* ---------- panels & tables ---------- */
+.panel{background:var(--card);border-radius:var(--radius);border:1px solid var(--border-light);
+  box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:16px}
+.tabs{display:flex;gap:22px;padding:0 18px;border-bottom:1px solid var(--border-light);align-items:center}
+.tab{font-size:13px;padding:13px 0;color:var(--ink-light);cursor:pointer;border-bottom:2px solid transparent;
+  font-weight:500;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif}
+.tab.on{color:var(--link);border-bottom-color:var(--link);font-weight:600}
+.tabs .spacer{margin-left:auto;padding:8px 0}
+.grp{padding:9px 18px;background:#fafafa;border-bottom:1px solid var(--border-light);border-top:1px solid var(--border-light);
+  font-size:12px;font-weight:600;color:var(--ink-med);display:flex;align-items:center;gap:7px}
+.grp .cnt{color:var(--ink-faint);font-weight:500}
+.grp .chev{fill:var(--ink-faint);width:11px;height:11px}
+.tbar{display:flex;align-items:center;gap:14px;padding:10px 18px}
+.tbar svg{width:14px;height:14px;fill:var(--ink-faint)}
+
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;padding:9px 12px;font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--ink-faint);border-bottom:1px solid var(--border);background:#fbfbfc;white-space:nowrap}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--border-light);color:var(--ink-med);vertical-align:middle}
+table.t tr:last-child td{border-bottom:none}
+table.t tbody tr{cursor:pointer;border-left:3px solid transparent}
+table.t tbody tr:hover td{background:var(--card-hover)}
+table.t tbody tr.sel{border-left-color:var(--link)}
+table.t tbody tr.sel td{background:#eef6fd}
+.appid{font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.appid svg{width:11px;height:11px;fill:var(--ink-faint)}
+.mono{font-variant-numeric:tabular-nums;white-space:nowrap}
+.muted,.dash{color:var(--ink-faint)}
+.age{font-weight:600;white-space:nowrap}
+.kebab{color:var(--ink-faint);text-align:center;width:40px}
+.rndcol{width:62px}
+
+/* ---------- people ---------- */
+.who{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.av{width:20px;height:20px;border-radius:50%;font-size:8px;font-weight:700;color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;position:relative}
+.av.lg{width:34px;height:34px;flex:0 0 34px;font-size:12px}
+.av .st{position:absolute;right:-1px;bottom:-1px;width:8px;height:8px;border-radius:50%;border:2px solid #fff}
+.av.lg .st{width:11px;height:11px}
+.st-available{background:#34c759}
+.st-away{background:#ff9500}
+.st-inactive{background:#c7c7cc}
+.st-blocked{background:#ff3b30}
+.who-name{font-size:12px;color:var(--ink-med)}
+
+/* ---------- ROUND CHIP (re-referral signal) ----------
+   Neutral at round 1, indigo from round 2 up. Never green:
+   green means done / supported everywhere else in Build. */
+.rrb{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;
+  border-radius:4px;background:var(--round);color:#fff;font-size:11px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums}
+.rrb.one{background:var(--neutral-bg);color:var(--ink-light);font-weight:600}
+
+/* ---------- STATUS / PROGRESS CHIPS ----------
+   Base chip = referral progress, exactly as the product shows it today.
+   Urgency overrides the chip colour and the leading icon only. Words never change. */
+.stchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+  padding:2px 8px;border-radius:4px;white-space:nowrap;line-height:1.45}
+.stchip svg{width:10px;height:10px;flex:0 0 10px}
+.st-notstarted{background:#f2f2f7;color:#86868b}
+.st-progress{background:#fdf7e6;color:#8a6d00;box-shadow:inset 0 0 0 1px #f0e3b8}
+.st-progress svg{fill:#c9a227}
+.st-complete{background:#eafaf0;color:#1a7a32;box-shadow:inset 0 0 0 1px #cdeedb}
+.st-complete svg{fill:#1a7a32}
+.st-responded{background:#e8f1fb;color:#1a6fa0}
+.st-unassigned{background:#fff;box-shadow:inset 0 0 0 1px var(--border);color:#86868b}
+.st-soon{background:#fffaf1;color:#9a5000;box-shadow:inset 0 0 0 1.5px #f0c489;font-weight:600}
+.st-soon svg{fill:#d4790a}
+.st-today{background:#ffeeda;color:#9a5000;box-shadow:inset 0 0 0 1.5px #e8871f;font-weight:600}
+.st-today svg{fill:#d4790a}
+.st-overdue{background:#fdeae8;color:#b81d14;box-shadow:inset 0 0 0 1.5px #d94436;font-weight:600}
+.st-overdue svg{fill:#b81d14}
+
+/* position chips */
+.chip{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:4px}
+.chip svg{width:9px;height:9px}
+.p-sup{background:var(--positive-bg);color:var(--positive-text)}
+.p-supc{background:#eef6fd;color:var(--link)}
+.p-not{background:var(--negative-bg);color:var(--negative-text)}
+.c-team{background:#e8f1fb;color:#1a6fa0}
+.c-neutral{background:var(--neutral-bg);color:var(--ink-light)}
+.c-yellow{background:#fff8dc;color:#8a6d00}
+.c-draft{background:#fdeceb;color:#b8524a}
+.c-green{background:var(--positive-bg);color:var(--positive-text)}
+.c-amber{background:var(--warning-bg);color:var(--warning-text)}
+.c-admin{background:#fbe9f7;color:#a3298c}
+.c-away{background:var(--warning-bg);color:var(--warning-text)}
+.c-blocked{background:var(--negative-bg);color:var(--negative-text)}
+.c-notlodged{background:#fdeaef;color:#b03060}
+
+/* ---------- AGE CELL: always elapsed days; urgency adds icon + colour ---------- */
+.agecell{display:inline-flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap;color:var(--ink-med)}
+.agecell svg{width:11px;height:11px;flex:0 0 11px}
+.ag-soon,.ag-today{color:#9a5000}
+.ag-soon svg,.ag-today svg{fill:#d4790a}
+.ag-overdue{color:#b81d14}
+.ag-overdue svg{fill:#b81d14}
+
+/* ---------- application overview cards ---------- */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.ov-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+/* prototype chrome: marks the panel under discussion, not product UI */
+.ov-card.focus-panel{border:2px solid #d93025;box-shadow:0 0 0 3px rgba(217,48,37,.10),var(--shadow-sm)}
+.ov-head{padding:12px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;
+  justify-content:space-between;gap:10px}
+.ov-title{font-size:13px;font-weight:600;color:var(--ink)}
+.ov-body{padding:12px 16px;flex:1}
+.kv{display:flex;padding:5px 0;font-size:12px;border-bottom:1px solid #f7f7f9}
+.kv:last-child{border-bottom:none}
+.kv dt{width:124px;flex:0 0 124px;color:var(--ink-light)}
+.kv dd{color:var(--ink-med)}
+.kv dd a{color:var(--link);text-decoration:none}
+.btn-out{border:1px solid var(--border);background:#fff;border-radius:var(--radius-sm);padding:5px 14px;
+  font-size:12px;color:var(--ink-med);font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;
+  display:inline-flex;align-items:center;gap:6px}
+.btn-out:hover{background:var(--bg)}
+.btn-out svg{width:12px;height:12px;fill:var(--ink-light)}
+.btn-wide{width:100%;justify-content:center;margin-top:10px}
+.btn-primary{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;
+  font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-primary:hover{background:#153f70}
+.btn-primary:disabled{background:#e5e5ea;color:var(--ink-faint);cursor:not-allowed}
+.mapbox{height:184px;background:#fbeef5;position:relative;overflow:hidden;border-radius:8px;
+  border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center}
+.mapbox .lot{position:relative;z-index:2;border:2px solid #d4a017;background:rgba(255,214,0,.28);
+  padding:8px 20px;font-size:11px;font-weight:700;color:#8a6d00;transform:rotate(-6deg)}
+.mapbox::before{content:'';position:absolute;inset:0;background:
+  repeating-linear-gradient(56deg,transparent 0 40px,#f0dbe6 40px 41px),
+  repeating-linear-gradient(146deg,transparent 0 54px,#f0dbe6 54px 55px)}
+.prog{height:10px;border-radius:3px;overflow:hidden;display:flex;gap:3px;margin:8px 0 10px}
+.prog i{height:100%;border-radius:2px}
+.prog-line{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-med)}
+.hint{font-size:11px;color:var(--ink-light);margin-bottom:8px}
+.doc{display:flex;align-items:center;gap:9px;padding:7px 10px;font-size:12px;background:#fafafb;
+  border-radius:6px;margin-bottom:6px;color:var(--ink-med)}
+.doc span.pdf{font-size:9px;font-weight:700;color:#c0392b;border:1px solid #f0cfcb;border-radius:3px;padding:1px 3px}
+table.mini{width:100%;border-collapse:collapse;font-size:11.5px}
+table.mini th{text-align:left;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--ink-faint);padding:6px 8px 6px 0;border-bottom:1px solid var(--border-light);white-space:nowrap}
+table.mini td{padding:9px 8px 9px 0;border-bottom:1px solid var(--border-light);color:var(--ink-med);vertical-align:middle}
+table.mini tr:last-child td{border-bottom:none}
+table.mini .team{color:var(--ink);font-weight:500}
+table.mini .rnd{width:34px;padding-right:8px}
+
+/* ---------- right rail (team inbox) ---------- */
+.rail{width:0;flex:0 0 0;overflow:hidden;transition:flex-basis .2s ease,width .2s ease;
+  border-left:1px solid var(--border);background:var(--card);align-self:stretch;position:sticky;top:55px;
+  height:calc(100vh - 55px)}
+.rail.on{width:420px;flex:0 0 420px}
+.rail-in{width:420px;height:100%;overflow-y:auto;padding-bottom:30px}
+.rail-top{display:flex;justify-content:flex-end;padding:12px 18px;background:#fbfbfc;border-bottom:1px solid var(--border-light)}
+.sec{border-bottom:1px solid var(--border-light)}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;cursor:pointer}
+.sec-t{font-size:13px;font-weight:600;color:var(--ink)}
+.sec-h svg{width:13px;height:13px;fill:var(--ink-faint);transition:transform .15s}
+.sec.closed .sec-h svg.chev{transform:rotate(-90deg)}
+.sec-b{padding:0 18px 16px}
+.sec.closed .sec-b{display:none}
+.req{background:#eef6fd;border-radius:8px;padding:12px 14px}
+.req-t{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.req-x{font-size:12px;color:var(--ink-med)}
+.req-m{font-size:11px;color:var(--ink-light);margin-top:6px}
+
+/* ---------- assign modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(29,29,31,.42);z-index:400;display:none;
+  align-items:center;justify-content:center;padding:24px}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.22);width:100%;max-width:492px;overflow:hidden}
+.m-head{display:flex;align-items:center;gap:12px;padding:20px 24px 0}
+.m-grip{display:grid;grid-template-columns:3px 3px;gap:3px;flex:0 0 auto}
+.m-grip i{width:3px;height:3px;border-radius:50%;background:var(--ink-faint);display:block}
+.m-title{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.2px;display:flex;align-items:center;gap:9px}
+.m-x{margin-left:auto;background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--ink-light);padding:2px 4px}
+.m-sec{font-size:11px;font-weight:600;color:var(--ink-light);padding:4px 24px 5px}
+.m-row + .m-sec,.m-note + .m-sec{padding-top:14px}
+.m-list{max-height:430px;overflow-y:auto;padding:12px 0 6px}
+.m-row{display:flex;align-items:center;gap:12px;padding:9px 24px;cursor:pointer;border-left:3px solid transparent}
+.m-row:hover{background:#f5f5f7}
+.m-row.prev{border-left-color:var(--link);background:#eaf3fb}
+.m-row.prev:hover{background:#e0edf8}
+.m-row.sel{background:#eef6fd}
+.m-row.prev.sel{background:#e0edf8}
+.m-row.dis{cursor:not-allowed;opacity:.55}
+.m-row.dis:hover{background:transparent}
+.m-row.prev.dis:hover{background:#eaf3fb}
+.m-name{font-size:14px;font-weight:600;color:var(--ink)}
+.m-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.m-count{font-size:13px;color:var(--ink-light);font-variant-numeric:tabular-nums;min-width:12px;text-align:right}
+.m-tick{width:15px;height:15px;fill:var(--link);visibility:hidden}
+.m-row.sel .m-tick{visibility:visible}
+.m-note{font-size:11.5px;color:var(--warning-text);padding:0 24px 8px 27px}
+.m-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--border-light)}
+.btn-flat{background:none;border:none;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink-med);
+  font-weight:500;cursor:pointer;padding:6px 4px}
+.btn-go{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;
+  font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-go:hover{background:#153f70}
+.btn-go:disabled{background:#eeeef1;color:var(--ink-faint);cursor:not-allowed}
+
+/* ---------- tooltip / toast / key ---------- */
+#tt{position:fixed;z-index:450;background:#1d1d1f;color:#fff;border-radius:5px;padding:8px 12px;
+  opacity:0;pointer-events:none;transition:opacity .12s;font-size:11px;line-height:1.5;
+  box-shadow:0 4px 14px rgba(0,0,0,.22);max-width:320px}
+#tt.on{opacity:1}
+#tt b{display:block;margin-bottom:4px}
+#tt .r{color:#c7c7cc}
+#tt .tt-g{display:grid;grid-template-columns:auto auto;column-gap:14px;row-gap:2px;align-items:baseline}
+#tt .tt-k{color:#a1a1a6}
+#tt .tt-v{color:#fff;text-align:right;font-variant-numeric:tabular-nums}
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#1d1d1f;color:#fff;
+  padding:11px 18px;border-radius:9px;font-size:12.5px;z-index:500;opacity:0;transition:all .25s;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:9px}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:14px;height:14px;fill:#7dd693;flex:0 0 14px}
+#toast .undo{background:none;border:none;color:#7ab8e0;font-family:'Inter',sans-serif;font-size:12px;
+  font-weight:600;cursor:pointer;padding:0 0 0 6px}
+#keypanel{position:fixed;left:70px;bottom:16px;width:452px;max-height:calc(100vh - 90px);overflow-y:auto;
+  background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);
+  padding:14px 16px;z-index:300;display:none;font-size:11px}
+#keypanel.open{display:block}
+.key-h{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);margin-bottom:8px}
+.key-row{display:grid;grid-template-columns:136px 1fr;gap:10px;align-items:center;padding:3px 0}
+.key-row>span:last-child{color:var(--ink-light);font-size:10px;line-height:1.4}
+.key-f{margin-top:11px;padding-top:9px;border-top:1px solid var(--border-light);color:var(--ink-faint);font-size:10px;line-height:1.5}
+.key-f b{color:var(--ink-med)}
+
+/* ---------- access gate ---------- */
+#gate{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#gate.done{display:none}
+.gate-card{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.07),0 2px 8px rgba(0,0,0,.04);
+  padding:38px 44px 42px;width:100%;max-width:440px;text-align:center}
+.gate-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.4px;margin-bottom:14px}
+.gate-sub{font-size:13px;color:#8b96a8;line-height:1.6;margin-bottom:26px}
+.gate-input{width:100%;padding:12px 14px;border:1px solid #e3e5ea;border-radius:9px;font-family:'Inter',sans-serif;
+  font-size:14px;color:var(--ink);text-align:center;letter-spacing:3px;outline:none;background:#fff}
+.gate-input:focus{border-color:#b9bec8}
+.gate-input.bad{border-color:#e0827b}
+.gate-btn{width:100%;margin-top:14px;padding:13px 0;border:none;border-radius:9px;background:#1d1d1f;color:#fff;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.gate-btn:hover{background:#000}
+.gate-err{font-size:12px;color:#b81d14;margin-top:14px;min-height:16px;visibility:hidden}
+.gate-err.show{visibility:visible}
+body.locked{overflow:hidden}
+
+.proto-tag{position:fixed;bottom:14px;right:14px;font-size:10px;color:var(--ink-faint);background:var(--card);
+  padding:4px 11px;border-radius:6px;border:1px solid var(--border);box-shadow:var(--shadow-sm);z-index:100;max-width:540px}
+@media(max-width:1240px){.ov-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.ov-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-title">Build AU &mdash; Referrals</div>
+    <div class="gate-sub">Referral urgency and internal re-referrals, combined.<br />This prototype is commercial in confidence.</div>
+    <input class="gate-input" id="gate-pw" type="password" autocomplete="off" spellcheck="false" />
+    <button class="gate-btn" id="gate-go">Continue</button>
+    <div class="gate-err" id="gate-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<div class="brand-rule"></div>
+
+<nav class="sidebar">
+  <div class="sidebar-nav">
+    <button class="sidebar-item" data-nav="dash" title="Dashboard"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg></button>
+    <button class="sidebar-item" data-nav="apps" title="Applications"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></button>
+    <button class="sidebar-item" title="Documents"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+    <button class="sidebar-item" data-nav="inbox" title="Teams"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></button>
+    <button class="sidebar-item" data-nav="all" title="Referrals"><svg viewBox="0 0 24 24"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+    <button class="sidebar-item" title="Expand"><svg viewBox="0 0 24 24"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></button>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="sidebar-divider"></div>
+    <button class="sidebar-item" title="About"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
+    <button class="sidebar-item" title="Help"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg></button>
+  </div>
+</nav>
+
+<div class="main-area">
+  <div class="topbar">
+    <div class="logo"><span class="mark"><svg viewBox="0 0 24 24"><path d="M4 14h3v6H4zm6.5-6h3v12h-3zM17 11h3v9h-3z"/></svg></span>Objective <em>BUILD</em></div>
+    <div class="topbar-right">
+      <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span class="pip"></span></div>
+      <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div>
+      <div class="avatar-sm">SR</div><span class="user-name">Sean Richards</span>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <span class="ctrl-tag">Concept controls</span>
+    <div class="ctrl-group"><span class="ctrl-label">Screen</span>
+      <div class="seg" id="seg-screen">
+        <button data-screen="dash" class="on">1 &middot; Dashboard</button>
+        <button data-screen="apps">2 &middot; All applications</button>
+        <button data-screen="ov">3 &middot; Application overview</button>
+        <button data-screen="all">4 &middot; All referrals</button>
+        <button data-screen="inbox">5 &middot; Team inbox</button>
+      </div>
+    </div>
+    <div class="ctrl-group"><span class="ctrl-label">View</span>
+      <div class="seg" id="seg-mode">
+        <button data-mode="today">Today</button>
+        <button data-mode="urgency">Urgency</button>
+        <button data-mode="both" class="on">Urgency + re-referrals</button>
+      </div>
+    </div>
+    <button class="ctrl-key" id="btn-key">Key</button>
+  </div>
+
+  <div class="body-row">
+    <div class="page" id="page"></div>
+    <aside class="rail" id="rail"><div class="rail-in" id="rail-in"></div></aside>
+  </div>
+</div>
+
+<div class="mask" id="mask"><div id="modal"></div></div>
+<div id="tt"></div>
+<div id="keypanel"></div>
+<div id="toast"></div>
+<div class="proto-tag">Build AU &mdash; Referral urgency + internal re-referrals &mdash; Sean Richards (Product) &mdash; Concept demonstration only. Does not conform to the Objective Design Language. Commercial in confidence.</div>
+
+<script>
+/* ============================================================
+   ONE REFERRAL SPINE, TWO DERIVATIONS
+   Every referral record is a ROUND: the nth referral of this
+   application to this team. Off that one record:
+     urgency  = how late is it   (team KPI + warning window)
+     round    = how many times have we seen it
+   ============================================================ */
+
+var TODAY = new Date(2026,7,28);            /* time is frozen: 28 Aug 2026 */
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DEFAULT_WARN = 3;
+var INBOX_TEAM = 'Heritage';
+
+/* Per-team turnaround KPI and warning window, both council configurable. */
+var TEAMS = {
+  'Building Surveyor':    {kpi:5,  warn:1},
+  'Environmental Health': {kpi:10, warn:3},
+  'Stormwater':           {kpi:10, warn:3},
+  'Traffic & Transport':  {kpi:14, warn:4},
+  'Landscaping':          {kpi:15, warn:4},
+  'Heritage':             {kpi:21, warn:5}
+};
+var RANK = {overdue:0, today:1, soon:2, none:3, track:4, done:5};
+
+function shift(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function fmt(d){return (d.getDate()<10?'0':'')+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();}
+function pl(n,w){return n+' '+w+(n===1?'':'s');}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function ini(n){return n.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();}
+
+/* ---------- icons ---------- */
+var TRI  ='<svg viewBox="0 0 16 16"><path d="M8 1.1 15.4 14.2H.6L8 1.1zm.9 4.8H7.1v4.5h1.8V5.9zm0 5.5H7.1v1.8h1.8v-1.8z"/></svg>';
+var CIRC ='<svg viewBox="0 0 16 16"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.9 12.1H7.1v-1.8h1.8v1.8zm0-3.1H7.1V3.5h1.8V9z"/></svg>';
+var CLOCK='<svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5A5.5 5.5 0 118 2.5a5.5 5.5 0 010 11zm.8-9h-1.6v4.4l3.4 2 .8-1.3-2.6-1.5V4.5z"/></svg>';
+var TICK ='<svg viewBox="0 0 16 16"><path d="M6.2 12.6 1.9 8.3l1.3-1.3 3 2.9 6.6-6.5 1.3 1.3z"/></svg>';
+var PLAY ='<svg viewBox="0 0 16 16"><path d="M4 2l9 6-9 6z"/></svg>';
+var PEN  ='<svg viewBox="0 0 16 16"><path d="M2 12.2 11.1 3l1.9 1.9L4 14H2v-1.8z"/></svg>';
+var MTICK='<svg class="m-tick" viewBox="0 0 16 16"><path d="M6.2 12.6 1.9 8.3l1.3-1.3 3 2.9 6.6-6.5 1.3 1.3z"/></svg>';
+var COPY ='<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"/></svg>';
+var CHEV ='<svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>';
+var SEND ='<svg viewBox="0 0 24 24"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
+var BACK ='<svg class="back" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>';
+var SEARCH='<svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 101-1l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>';
+var FILTER='<svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>';
+var KEBAB='<span style="color:var(--ink-faint)">&#8942;</span>';
+
+/* ---------- people ---------- */
+var AVC={'Sean Richards':'#a33fa8','Nigel Paxton':'#2e9e5b','Hayley Stand':'#3f7ba8','Romina Iwikau':'#c0562e',
+ 'Daniel Cho':'#0f7f8c','Anu Ponugoti':'#7b5bd6','Priya Naidu':'#0f7f8c','Marcus Field':'#2e9e5b',
+ 'Tanya Boateng':'#c0562e','Elena Marchetti':'#8a6d00','Jai Kumar':'#3f7ba8','Chrissie Curtis':'#c0562e',
+ 'Tom Whelan':'#2e9e5b','Dave Tran':'#8a6d00','Alicia Prasad':'#7b5bd6'};
+
+/* Heritage team roster — drives the Assign dialog. */
+var MEMBERS={
+ 'Anu Ponugoti':    {av:'available', open:2},
+ 'Daniel Cho':      {av:'available', open:4},
+ 'Marcus Field':    {av:'blocked',   open:3},
+ 'Priya Naidu':     {av:'available', open:9},
+ 'Sean Richards':   {av:'available', open:3},
+ 'Tanya Boateng':   {av:'away',      open:0, role:'Team admin'},
+ 'Elena Marchetti': {av:'inactive',  open:0}   /* never listed */
+};
+
+/* ============================================================
+   CANONICAL FIXTURE — NSW, one application-centric dataset.
+   'sent' is whole calendar days since the round was referred,
+   so nothing goes stale against the frozen TODAY.
+   ============================================================ */
+var APPS=[
+ {id:'DA047158', ext:'PAN-12607021', age:48, addr:'174 Skye Point Road, Coal Point NSW 2283', dev:'Residential',
+  officer:'Nigel Paxton', team:'Planning - General', comp:null, rfi:'R2 &middot; Draft', det:'Recommendation made',
+  refs:[
+   {team:'Environmental Health',round:1,assigned:null,sent:12,status:'unassigned',position:null,by:'Nigel Paxton',assignedBy:null,turnaround:null,
+    req:'Contamination assessment required for the former workshop use.'},
+   {team:'Heritage',round:1,assigned:'Daniel Cho',sent:83,status:'complete',position:'Supported with conditions',by:'Nigel Paxton',assignedBy:'Tanya Boateng',turnaround:11,
+    req:'Heritage conservation area &mdash; original referral.'},
+   {team:'Heritage',round:2,assigned:'Sean Richards',sent:24,status:'awaiting',position:null,by:'Nigel Paxton',assignedBy:'Tanya Boateng',turnaround:null,inbound:true,
+    req:'Amended plans &mdash; fence and front setback revised.'}
+  ]},
+
+ {id:'DA365451', ext:'PAN-12607024', age:44, addr:'79 Walter Street, Paddington NSW 2021', dev:'Residential',
+  officer:'Nigel Paxton', team:'Planning - General', comp:null, rfi:'R1 &middot; Draft', det:'Recommendation made',
+  refs:[
+   {team:'Heritage',round:1,assigned:null,sent:4,status:'unassigned',position:null,by:'Nigel Paxton',assignedBy:null,turnaround:null,
+    req:'Heritage conservation area. Please advise.'},
+   {team:'Traffic & Transport',round:1,assigned:'Chrissie Curtis',sent:13,status:'awaiting',position:null,by:'Nigel Paxton',assignedBy:'Bruce Tan',turnaround:null,
+    req:'Driveway crossing to a classified road.'}
+  ]},
+
+ {id:'DA215173', ext:'PAN-12607033', age:42, addr:'30 Walter Street, Paddington NSW 2021', dev:'Residential',
+  officer:'Sean Richards', team:'Planning - General', comp:'In progress 36/65', rfi:'R1 &middot; Draft', det:'Recommendation made',
+  focus:true,
+  refs:[
+   {team:'Environmental Health',round:1,assigned:'Jai Kumar',sent:96,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Karen Molloy',turnaround:8,
+    req:'Acoustic and waste assessment for the original scheme.'},
+   {team:'Environmental Health',round:2,assigned:'Jai Kumar',sent:17,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Karen Molloy',turnaround:null,
+    req:'Re-referred following the RFI response &mdash; revised waste storage.'},
+   {team:'Traffic & Transport',round:1,assigned:'Chrissie Curtis',sent:14,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Bruce Tan',turnaround:null,
+    req:'Parking provision and vehicle access.'},
+   {team:'Building Surveyor',round:1,assigned:'Tom Whelan',sent:4,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Leah Doyle',turnaround:null,
+    req:'BCA capability statement.'},
+   {team:'Heritage',round:1,assigned:'Daniel Cho',sent:175,status:'complete',position:'Supported with conditions',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:14,
+    req:'Heritage impact statement &mdash; original submission.'},
+   {team:'Heritage',round:2,assigned:'Anu Ponugoti',sent:67,status:'complete',position:'Not supported',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:9,
+    req:'Amended roof form following the first heritage response.'},
+   {team:'Heritage',round:3,assigned:null,sent:2,status:'unassigned',position:null,by:'Sean Richards',assignedBy:null,turnaround:null,inbound:true,
+    req:'Amended heritage impact statement attached. Please review the revised roof form.'},
+   {team:'Landscaping',round:1,assigned:'Alicia Prasad',sent:108,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:22,
+    req:'Deep soil and canopy cover.'},
+   {team:'Landscaping',round:2,assigned:'Alicia Prasad',sent:2,status:'responded',position:'Supported',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:2,
+    req:'Revised landscape plan following the amended footprint.'},
+   {team:'Stormwater',round:1,assigned:'Dave Tran',sent:6,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Bruce Tan',turnaround:6,
+    req:'On-site detention sizing.'}
+  ]},
+
+ {id:'DA456229', ext:'PAN-12607041', age:23, addr:'127 Skye Point Road, Coal Point NSW 2283', dev:'Residential',
+  officer:'Hayley Stand', team:'Planning - General', comp:null, rfi:null, det:'Not started',
+  refs:[
+   {team:'Stormwater',round:1,assigned:'Dave Tran',sent:3,status:'awaiting',position:null,by:'Hayley Stand',assignedBy:'Bruce Tan',turnaround:null,
+    req:'Overland flow path.'},
+   {team:'Landscaping',round:1,assigned:'Alicia Prasad',sent:5,status:'awaiting',position:null,by:'Hayley Stand',assignedBy:'Gail Hurst',turnaround:null,
+    req:'Street tree retention.'},
+   {team:'Heritage',round:1,assigned:null,sent:18,status:'unassigned',position:null,by:'Hayley Stand',assignedBy:null,turnaround:null,
+    req:'Item of local significance. Please advise.'}
+  ]},
+
+ {id:'DA974289', ext:'PAN-12607044', age:22, addr:'10 Kent Street, Sydney NSW 2000', dev:'Residential',
+  officer:null, team:'Planning - General', comp:null, rfi:null, det:'Not started',
+  refs:[
+   {team:'Stormwater',round:1,assigned:'Dave Tran',sent:4,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Bruce Tan',turnaround:null,
+    req:'Connection to the council system.'},
+   {team:'Landscaping',round:1,assigned:'Alicia Prasad',sent:7,status:'responded',position:'Supported',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:7,
+    req:'Podium planting.'},
+   {team:'Heritage',round:1,assigned:'Daniel Cho',sent:207,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:19,
+    req:'Original signage schedule.'},
+   {team:'Heritage',round:2,assigned:'Priya Naidu',sent:122,status:'complete',position:'Supported with conditions',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:12,
+    req:'First amendment to the signage schedule.'},
+   {team:'Heritage',round:3,assigned:'Priya Naidu',sent:62,status:'complete',position:'Not supported',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:8,
+    req:'Second amendment to the signage schedule.'},
+   {team:'Heritage',round:4,assigned:null,sent:24,status:'unassigned',position:null,by:'Sean Richards',assignedBy:null,turnaround:null,
+    req:'Third amendment. Revised signage schedule attached.'}
+  ]},
+
+ {id:'DA026105', ext:'PAN-12607052', age:10, addr:'28 Walter Street, Paddington NSW 2021', dev:'Residential',
+  officer:'Romina Iwikau', team:'Planning Team East', comp:'In progress 37/72', rfi:null, det:'Not started',
+  refs:[
+   {team:'Building Surveyor',round:1,assigned:'Tom Whelan',sent:5,status:'awaiting',position:null,by:'Romina Iwikau',assignedBy:'Leah Doyle',turnaround:null,
+    req:'Fire separation to the boundary.'},
+   {team:'Stormwater',round:1,assigned:'Dave Tran',sent:6,status:'responded',position:'Supported',by:'Romina Iwikau',assignedBy:'Bruce Tan',turnaround:6,
+    req:'Rainwater reuse.'},
+   {team:'Heritage',round:1,assigned:'Marcus Field',sent:101,status:'complete',position:'Supported with conditions',by:'Romina Iwikau',assignedBy:'Tanya Boateng',turnaround:16,
+    req:'Original heritage referral.'},
+   {team:'Heritage',round:2,assigned:null,sent:8,status:'unassigned',position:null,by:'Romina Iwikau',assignedBy:null,turnaround:null,
+    req:'Applicant response to the heritage conditions.'}
+  ]},
+
+ {id:'DA778112', ext:'PAN-12607048', age:18, addr:'4 Ormond Street, Paddington NSW 2021', dev:'Residential',
+  officer:'Hayley Stand', team:'Planning - General', comp:null, rfi:null, det:'Not started',
+  refs:[
+   {team:'Heritage',round:1,assigned:'Priya Naidu',sent:24,status:'complete',position:'Not supported',by:'Hayley Stand',assignedBy:'Tanya Boateng',turnaround:6,
+    req:'Rear addition to a contributory item.'},
+   {team:'Heritage',round:2,assigned:null,sent:1,status:'unassigned',position:null,by:'Hayley Stand',assignedBy:null,turnaround:null,
+    req:'Amended plans &mdash; rear addition reduced.'},
+   {team:'Stormwater',round:1,assigned:'Dave Tran',sent:9,status:'awaiting',position:null,by:'Hayley Stand',assignedBy:'Bruce Tan',turnaround:null,
+    req:'Absorption trench detail.'}
+  ]},
+
+ {id:'DA445607', ext:'PAN-12607035', age:null, addr:'138 Skye Point Road, Coal Point NSW 2283', dev:'Residential',
+  officer:null, team:'Planning - General', comp:null, rfi:null, det:'Not started', preLodge:{age:56,fwd:'Yes'}, refs:[]}
+];
+
+/* index: give every round a back-reference to its application */
+var ALLREFS=[];
+APPS.forEach(function(a){ a.refs.forEach(function(r){ r.appRef=a; ALLREFS.push(r); }); });
+function appById(id){var f=null;APPS.forEach(function(a){if(a.id===id)f=a;});return f;}
+var FOCUS=appById('DA215173');
+
+/* ============================================================
+   URGENCY MODEL — unchanged from the urgency prototype.
+   NOTE: an unassigned round resolves to 'none' for its whole KPI
+   window and then jumps straight to 'overdue'. That behaviour is
+   deliberately preserved here; it is open question 7.1, not intent.
+   ============================================================ */
+function urg(r){
+  var t = TEAMS[r.team] || {kpi:10, warn:DEFAULT_WARN};
+  var warn = (t.warn===undefined?DEFAULT_WARN:t.warn);
+  var due = t.kpi - r.sent;
+  var referred = shift(TODAY,-r.sent);
+  var s = {ref:r, kpi:t.kpi, warn:warn, due:due, referred:referred, dueDate:shift(referred,t.kpi),
+           team:r.team, assigned:r.assigned, sent:r.sent, raw:r.status, round:r.round};
+  if(r.status==='responded'){ s.k='done'; s.label='Responded'; return s; }
+  if(r.status==='complete'){  s.k='done'; s.label='Complete';  return s; }
+  if(r.status==='unassigned'){
+    if(due<0){ s.k='overdue'; s.unowned=true; s.label=pl(-due,'day')+' overdue'; return s; }
+    s.k='none'; s.label='Unassigned'; return s;
+  }
+  if(due<0){  s.k='overdue'; s.label=pl(-due,'day')+' overdue'; return s; }
+  if(due===0){s.k='today';   s.label='Due today'; return s; }
+  if(due<=warn){s.k='soon';  s.label='Due in '+pl(due,'day'); return s; }
+  s.k='track'; s.label='Due in '+pl(due,'day'); return s;
+}
+function isOpen(r){ return r.status==='unassigned' || r.status==='awaiting'; }
+
+/* Group an application's rounds by team. Only the LATEST round per
+   team carries a clock; earlier rounds are history and show turnaround. */
+function teamGroups(app){
+  var map={}, order=[];
+  app.refs.forEach(function(r){
+    if(!map[r.team]){ map[r.team]={team:r.team,rounds:[]}; order.push(r.team); }
+    map[r.team].rounds.push(r);
+  });
+  return order.sort().map(function(t){
+    var g=map[t];
+    g.rounds.sort(function(a,b){return a.round-b.round;});
+    g.latest=g.rounds[g.rounds.length-1];
+    g.count=g.rounds.length;
+    g.state=urg(g.latest);
+    return g;
+  });
+}
+
+/* Aggregate for an application row. Counts TEAMS, each team's latest
+   round driving its state — counting rounds would let historic
+   completions bury a live overdue round. */
+function rollup(app){
+  var groups=teamGroups(app);
+  var counts={overdue:0,today:0,soon:0,none:0,track:0,done:0}, worst='done';
+  groups.forEach(function(g){ counts[g.state.k]++; });
+  ['overdue','today','soon','none','track','done'].forEach(function(k){
+    if(counts[k]>0 && RANK[k]<RANK[worst]) worst=k;
+  });
+  return {groups:groups, counts:counts, worst:worst, done:counts.done, total:groups.length};
+}
+
+/* ---------- view mode: today | urgency | both ---------- */
+var MODE='both', SCREEN='dash', SEL=null;
+function urgOn(){ return MODE!=='today'; }
+function roundOn(){ return MODE==='both'; }
+
+/* ---------- tooltip registry ---------- */
+var TTREG=[]; var tt=document.getElementById('tt');
+function reg(h){TTREG.push(h);return TTREG.length-1;}
+document.addEventListener('mouseover',function(e){
+  var el=e.target.closest('[data-tt]');
+  if(!el){tt.classList.remove('on');return;}
+  tt.innerHTML=TTREG[+el.dataset.tt]; tt.classList.add('on');
+  var b=el.getBoundingClientRect(),h=tt.offsetHeight,w=tt.offsetWidth;
+  var top=b.bottom+8; if(top+h>window.innerHeight-10) top=Math.max(10,b.top-h-8);
+  var left=b.left;    if(left+w>window.innerWidth-14) left=window.innerWidth-w-14;
+  tt.style.top=top+'px'; tt.style.left=left+'px';
+});
+
+/* ============================================================
+   SHARED CELL RENDERERS
+   ============================================================ */
+function avatar(n,dot,lg){
+  var m=MEMBERS[n];
+  return '<span class="av'+(lg?' lg':'')+'" style="background:'+(AVC[n]||'#86868b')+'">'+ini(n)+
+    (dot&&m? '<span class="st st-'+m.av+'"></span>':'')+'</span>';
+}
+function person(n){ return n? '<span class="who">'+avatar(n)+'<span class="who-name">'+n+'</span></span>'
+                            : '<span class="muted">&mdash;</span>'; }
+function chip(txt,cls,glyph){ if(!txt) return '<span class="dash">&mdash;</span>';
+  return '<span class="chip '+cls+'">'+(glyph||'')+txt+'</span>'; }
+
+/* Round chip. Neutral at round 1, indigo from round 2 up, on every
+   screen. Green is reserved for done / supported. */
+function roundChip(n,tip){
+  return '<span class="rrb'+(n>=2?'':' one')+'"'+(tip||'')+'>'+n+'</span>';
+}
+function roundHistoryTip(g){
+  if(g.count<2) return '';
+  var lines=g.rounds.map(function(x){
+    var outcome = x.position? ' &middot; '+x.position : (x.status==='unassigned'? ' &middot; Unassigned':'');
+    return '<span class="r">Round '+x.round+' &middot; '+fmt(shift(TODAY,-x.sent))+' &middot; '+
+           (x.assigned||'Unassigned')+outcome+'</span>';
+  }).join('<br/>');
+  return ' data-tt="'+reg('<b>'+g.count+' referrals to '+g.team+'</b>'+lines)+'"';
+}
+
+/* Aggregate referral cell on an application row.
+   Words come from referral progress; colour and icon come from the
+   worst urgency state among that application's teams. */
+function rollupCell(app){
+  if(!app.refs.length) return '<span class="dash">&mdash;</span>';
+  var r=rollup(app);
+  var label = r.done===0       ? 'Not started ('+r.total+')'
+            : r.done===r.total ? 'Complete ('+r.done+'/'+r.total+')'
+            :                    'In progress ('+r.done+'/'+r.total+')';
+  var cls,icon;
+  if(urgOn() && r.worst==='overdue'){    cls='st-overdue';   icon=TRI;   }
+  else if(urgOn() && r.worst==='today'){ cls='st-today';     icon=CIRC;  }
+  else if(urgOn() && r.worst==='soon'){  cls='st-soon';      icon=CLOCK; }
+  else if(r.done===r.total){             cls='st-complete';  icon=TICK;  }
+  else if(r.done===0){                   cls='st-notstarted';icon='';    }
+  else {                                 cls='st-progress';  icon=PLAY;  }
+  var tip='';
+  if(urgOn()){
+    var c=r.counts;
+    /* On track = every team still in progress that is not overdue, due or
+       due soon. Finished teams are not counted as on track. */
+    var onTrack = c.track + c.none;
+    tip=' data-tt="'+reg('<b>Referral urgency</b><div class="tt-g">'+
+      '<span class="tt-k">Overdue</span><span class="tt-v">'+c.overdue+'</span>'+
+      '<span class="tt-k">Due</span><span class="tt-v">'+c.today+'</span>'+
+      '<span class="tt-k">Due soon</span><span class="tt-v">'+c.soon+'</span>'+
+      '<span class="tt-k">On track</span><span class="tt-v">'+onTrack+'</span>'+
+      '</div>')+'"';
+  }
+  return '<span class="stchip '+cls+'"'+tip+'>'+icon+label+'</span>';
+}
+
+/* Age of an open round, always in elapsed days. Urgency adds an icon
+   and recolours the number — the number never changes meaning. */
+function ageCell(s,detail){
+  if(!isOpen(s.ref)) return '<span class="dash">&mdash;</span>';
+  var icon='',cls='';
+  if(urgOn()){
+    icon={overdue:TRI,today:CIRC,soon:CLOCK}[s.k]||'';
+    cls ={overdue:'ag-overdue',today:'ag-today',soon:'ag-soon'}[s.k]||'';
+  }
+  var WORD={overdue:'Overdue',today:'Due',soon:'Due soon'};
+  var tip='';
+  /* 'kpi'   — screen 1: due date and the KPI period, nothing else.
+     'state' — screen 5: the same, headed by the urgency state.
+     'word'  — screens 3 and 4: the state word with the due line under it. */
+  if(urgOn() && (detail==='kpi' || detail==='state')){
+    var head=(detail==='state' && WORD[s.k])? '<b>'+WORD[s.k]+'</b>' : '';
+    tip=' data-tt="'+reg(head+'<div class="tt-g">'+
+      '<span class="tt-k">Due</span><span class="tt-v">'+fmt(s.dueDate)+'</span>'+
+      '<span class="tt-k">Team KPI</span><span class="tt-v">'+s.kpi+' days</span>'+
+      '</div>')+'"';
+  } else if(urgOn() && detail==='word' && WORD[s.k]){
+    tip=' data-tt="'+reg('<b>'+WORD[s.k]+'</b>'+
+        '<span class="r">Due '+fmt(s.dueDate)+' &middot; '+s.kpi+'-day KPI</span>')+'"';
+  }
+  return '<span class="agecell '+cls+'"'+tip+'>'+icon+pl(s.sent,'day')+'</span>';
+}
+
+/* Status chip on a referral row. Carries no urgency — urgency lives in
+   the Age cell, so the two signals never double up in one row. */
+function statusChip(st){
+  if(st==='responded')  return '<span class="stchip st-responded">Responded</span>';
+  if(st==='complete')   return '<span class="stchip st-complete">'+TICK+'Complete</span>';
+  if(st==='unassigned') return '<span class="stchip st-unassigned">Unassigned</span>';
+  return '<span class="stchip st-progress">'+PLAY+'In progress</span>';
+}
+function positionChip(p){
+  if(!p) return '<span class="dash">&mdash;</span>';
+  var cls = p==='Supported'? 'p-sup' : p==='Not supported'? 'p-not' : 'p-supc';
+  return '<span class="chip '+cls+'">'+p+'</span>';
+}
+
+var TH=function(a){return '<thead><tr>'+a.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr></thead>';};
+var SEARCHBAR='<div class="tbar">'+SEARCH+FILTER+'</div>';
+
+/* ============================================================
+   SCREEN 1 — DASHBOARD
+   The same person, both roles: assessing officer (rolled up, one
+   chip) and referral responder (per round, on the age).
+   ============================================================ */
+function renderDash(){
+  TTREG=[];
+  var pre=appById('DA445607');
+  var preRow='<tr><td><span class="age">'+pre.preLodge.age+' days</span></td><td class="mono">'+pre.ext+'</td>'+
+    '<td><span class="appid">'+pre.id+COPY+'</span></td><td>'+pre.addr+'</td><td>Development application</td>'+
+    '<td>'+pre.dev+'</td><td><span class="dash">&mdash;</span></td><td>'+chip(pre.preLodge.fwd,'c-green')+'</td></tr>';
+
+  var f=FOCUS;
+  var pgRow='<tr><td><span class="age">'+f.age+' days</span></td>'+
+    '<td><span class="appid">'+f.id+COPY+'</span></td><td>'+f.addr+'</td><td>Development application</td>'+
+    '<td>'+f.dev+'</td><td>'+rollupCell(f)+'</td><td>'+chip(f.comp,'c-amber',PLAY)+'</td>'+
+    '<td>'+chip(f.rfi,'c-draft',PEN)+'</td><td>'+chip(f.det,'c-yellow')+'</td></tr>';
+
+  var inbound=ALLREFS.filter(function(r){return r.inbound;})
+    .sort(function(a,b){return b.sent-a.sent;});
+  var inHead = roundOn()? ['Round','Age','Referred','Referred by','Application','Address','Status']
+                        : ['Age','Referred','Referred by','Application','Address','Status'];
+  var inRows=inbound.map(function(r){
+    var s=urg(r);
+    return '<tr>'+
+      /* No round-chip hover on the dashboard — the chip is a count here, not a drill-in. */
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round)+'</td>':'')+
+      '<td>'+ageCell(s,'kpi')+'</td>'+
+      '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
+      '<td>'+person(r.by)+'</td>'+
+      '<td><span class="appid">'+r.appRef.id+COPY+'</span></td>'+
+      '<td>'+r.appRef.addr+'</td>'+
+      '<td>'+statusChip(r.status)+'</td></tr>';
+  }).join('');
+
+  document.getElementById('page').innerHTML=
+   '<div class="page-title">Good morning Sean</div><div style="height:16px"></div>'+
+   '<div class="panel">'+
+   '<div class="tabs"><button class="tab">Admin (5)</button><button class="tab on">Active (3)</button>'+
+   '<button class="tab">Determine</button><button class="tab">Completed</button></div>'+
+   '<div class="grp">'+CHEV+'Pre-lodgement Review (7 days) <span class="cnt">(1)</span></div>'+SEARCHBAR+
+   '<table class="t">'+TH(['Age','PAN ID','Application','Address','Application type','Development type','Referrals','Forwarded'])+
+   '<tbody>'+preRow+'</tbody></table>'+
+   '<div class="grp">'+CHEV+'Planning - General <span class="cnt">(1)</span></div>'+SEARCHBAR+
+   '<table class="t">'+TH(['Age','Application','Address','Application type','Development type','Referrals','Compliance','RFI Letter','Determination'])+
+   '<tbody>'+pgRow+'</tbody></table>'+
+   '<div class="grp">'+CHEV+'Heritage <span class="cnt">('+inbound.length+' referred to my team)</span></div>'+SEARCHBAR+
+   '<table class="t">'+TH(inHead)+'<tbody>'+inRows+'</tbody></table>'+
+   '</div>';
+}
+
+/* ============================================================
+   SCREEN 2 — ALL APPLICATIONS
+   Only the Referrals column carries urgency, via the aggregate chip.
+   ============================================================ */
+function renderApps(){
+  TTREG=[];
+  var rows=APPS.map(function(a){
+    var age = a.age===null? '<span class="chip c-notlodged">Not lodged</span>'
+                          : '<span class="age">'+a.age+' days</span>';
+    return '<tr>'+
+      '<td>'+age+'</td>'+
+      '<td><span class="appid">'+a.id+COPY+'</span></td>'+
+      '<td>'+a.addr+'</td>'+
+      '<td>'+a.dev+'</td>'+
+      '<td>'+person(a.officer)+'</td>'+
+      '<td>'+chip(a.team,'c-team')+'</td>'+
+      '<td>'+rollupCell(a)+'</td>'+
+      '<td>'+(a.comp?chip(a.comp,'c-amber',PLAY):'<span class="dash">&mdash;</span>')+'</td>'+
+      '<td>'+(a.rfi?chip(a.rfi,'c-draft',PEN):'<span class="dash">&mdash;</span>')+'</td>'+
+      '<td>'+chip(a.det,a.det==='Recommendation made'?'c-yellow':'c-neutral')+'</td></tr>';
+  }).join('');
+  document.getElementById('page').innerHTML=
+   '<div class="page-title">Applications</div><div class="page-sub">Active applications from lodgement</div>'+
+   '<div style="height:16px"></div>'+
+   '<div class="panel"><div class="tabs"><button class="tab on">Active</button><button class="tab">Completed</button></div>'+
+   SEARCHBAR+
+   '<table class="t">'+TH(['Age','Application','Address','Development type','Assessing officer','Team','Referrals','Compliance','RFI Letter','Determination'])+
+   '<tbody>'+rows+'</tbody></table></div>';
+}
+
+/* ============================================================
+   SCREEN 3 — APPLICATION OVERVIEW  (the shared screen)
+   today   : one row per referral, no round, no urgency  — the product now
+   urgency : one row per referral, urgency on the age, sorted by severity
+   both    : one row per TEAM, round chip + urgency on the latest round
+   ============================================================ */
+function referralsCard(){
+  var a=FOCUS, body, title, hint='';
+  if(roundOn()){
+    var groups=teamGroups(a).slice().sort(function(x,y){return RANK[x.state.k]-RANK[y.state.k];});
+    title='Referrals ('+groups.length+' teams)';
+    body=groups.map(function(g){
+      return '<tr><td class="rnd"'+roundHistoryTip(g)+'>'+roundChip(g.count)+'</td>'+
+        '<td class="team">'+g.team+'</td>'+
+        '<td>'+ageCell(g.state,'word')+'</td>'+
+        '<td>'+statusChip(g.latest.status)+'</td></tr>';
+    }).join('');
+    return '<div class="ov-card focus-panel"><div class="ov-head"><span class="ov-title">'+title+'</span>'+
+      '<button class="btn-out">'+SEND+'Refer</button></div><div class="ov-body">'+hint+
+      '<table class="mini"><thead><tr><th class="rnd"></th><th>Team</th><th>Age</th><th>Status</th></tr></thead>'+
+      '<tbody>'+body+'</tbody></table>'+
+      '<button class="btn-out btn-wide" data-goto="all">View all referrals</button></div></div>';
+  }
+  /* today / urgency: the product's current structure — a team appears once per round */
+  var list=a.refs.slice();
+  if(urgOn()) list.sort(function(x,y){return RANK[urg(x).k]-RANK[urg(y).k];});
+  else list.sort(function(x,y){ return x.team<y.team?-1:x.team>y.team?1:x.round-y.round; });
+  title='Referrals ('+list.length+')';
+  body=list.map(function(r){
+    var s=urg(r);
+    return '<tr><td class="team">'+r.team+'</td>'+
+      '<td>'+ageCell(s,'word')+'</td>'+
+      '<td>'+statusChip(r.status)+'</td></tr>';
+  }).join('');
+  if(!urgOn()) hint='<div class="hint">A re-referral lists the team again, so Heritage appears three times and reads as three separate referrals.</div>';
+  return '<div class="ov-card focus-panel"><div class="ov-head"><span class="ov-title">'+title+'</span>'+
+    '<button class="btn-out">'+SEND+'Refer</button></div><div class="ov-body">'+hint+
+    '<table class="mini"><thead><tr><th>Team</th><th>Age</th><th>Status</th></tr></thead>'+
+    '<tbody>'+body+'</tbody></table>'+
+    '<button class="btn-out btn-wide" data-goto="all">View all referrals</button></div></div>';
+}
+
+function renderOv(){
+  TTREG=[];
+  var a=FOCUS;
+  var kv=function(k,v){return '<div class="kv"><dt>'+k+'</dt><dd>'+v+'</dd></div>';};
+  var lnk=function(t){return '<a href="#">'+t+'</a>';};
+
+  var summary='<div class="ov-card"><div class="ov-head"><span class="ov-title">Application summary</span></div>'+
+    '<div class="ov-body">'+kv('PAN ID',a.ext)+kv('Application',a.id)+kv('Address',a.addr)+
+    kv('Application type','Development application')+kv('Development type',a.dev)+
+    kv('EDC (ex GST)','AU$912,268')+kv('Description','Construction of a new single dwelling house')+
+    kv('Applicant name','Susana (Rowan) Lebsack')+kv('Applicant phone','+61 431 769 911')+'</div></div>';
+
+  var map='<div class="ov-card"><div class="ov-head"><span class="ov-title">Map preview</span></div>'+
+    '<div class="ov-body"><div class="mapbox"><span class="lot">R1</span></div></div></div>';
+
+  var plan='<div class="ov-card"><div class="ov-head"><span class="ov-title">Planning summary</span></div>'+
+    '<div class="ov-body">'+kv('LEP',lnk('Sydney Local Environmental Plan 2012'))+
+    kv('Land zoning',lnk('R1: General Residential'))+kv('Height of building',lnk('9 m'))+
+    kv('Floor space ratio',lnk('1.5:1'))+kv('Minimum lot size','Not provided')+
+    kv('Heritage',lnk('Paddington South Significance: Local'))+kv('Acid Sulfate Soils',lnk('Class 5'))+
+    kv('Regional plan boundary','Greater Sydney')+'</div></div>';
+
+  var compliance='<div class="ov-card"><div class="ov-head"><span class="ov-title">Compliance checklist</span></div>'+
+    '<div class="ov-body"><div class="hint">Use a checklist to assess this application against compliance requirements</div>'+
+    '<div class="prog-line"><span style="font-weight:600;color:var(--ink)">Progress</span><span>36 of 65 completed</span></div>'+
+    '<div class="prog"><i style="width:30%;background:#dff0d8"></i><i style="width:12%;background:#fbdada"></i>'+
+    '<i style="width:4%;background:#fdf3c8"></i><i style="width:6%;background:#dcd8f5"></i>'+
+    '<i style="width:16%;background:#e3e3e8"></i><i style="width:32%;background:#dceaf7"></i></div>'+
+    '<button class="btn-out btn-wide">View checklist</button></div></div>';
+
+  var docs='<div class="ov-card"><div class="ov-head"><span class="ov-title">Documents (13)</span></div>'+
+    '<div class="ov-body">'+
+    ['DA_Request_Additional_Information.pdf','RFI Response.pdf','Statement of Environmental Effects.pdf',
+     'Waste Management Plan.pdf','Survey Plan.pdf']
+      .map(function(d){return '<div class="doc"><span class="pdf">PDF</span>'+d+'</div>';}).join('')+
+    '<button class="btn-out btn-wide">View all documents</button></div></div>';
+
+  var conditions='<div class="ov-card"><div class="ov-head"><span class="ov-title">Conditions (3)</span></div>'+
+    '<div class="ov-body"><button class="btn-out btn-wide" style="margin-top:0">View all conditions</button></div></div>';
+
+  var rfi='<div class="ov-card"><div class="ov-head"><span class="ov-title">RFI letters (1)</span>'+
+    '<button class="btn-out">+ Add issue</button></div>'+
+    '<div class="ov-body"><table class="mini"><thead><tr><th>Round</th><th>Sent by</th><th>Issues</th><th>Status</th></tr></thead>'+
+    '<tbody><tr><td>Round 1</td><td class="muted">&mdash;</td><td>5</td><td>'+chip('Draft','c-draft',PEN)+'</td></tr></tbody></table>'+
+    '<button class="btn-out btn-wide">View RFI letters</button></div></div>';
+
+  var assess='<div class="ov-card"><div class="ov-head"><span class="ov-title">Assessment</span></div>'+
+    '<div class="ov-body">'+kv('Status',chip('Recommendation made','c-yellow'))+
+    kv('Recommendation',chip('Approval','c-green'))+kv('Assessing officer',person(a.officer))+
+    kv('Consent duration','5 years')+'<button class="btn-out btn-wide">View assessment</button></div></div>';
+
+  document.getElementById('page').innerHTML=
+   '<div class="crumb">Applications &rsaquo; '+a.id+'</div>'+
+   '<div class="page-title">'+BACK+a.addr+'</div>'+
+   '<div class="page-sub">'+a.id+' &middot; Development application</div><div style="height:16px"></div>'+
+   '<div class="ov-grid">'+summary+map+plan+'</div>'+
+   '<div class="ov-grid">'+compliance+referralsCard()+docs+'</div>'+
+   '<div class="ov-grid">'+conditions+rfi+assess+'</div>';
+}
+
+/* ============================================================
+   SCREEN 4 — ALL REFERRALS
+   Every round, nothing collapsed. Age is only shown while a round is
+   open; closed rounds show turnaround, not urgency.
+   ============================================================ */
+function renderAll(){
+  TTREG=[];
+  var a=FOCUS;
+  var list=a.refs.slice().sort(function(x,y){
+    if(x.team<y.team) return -1; if(x.team>y.team) return 1; return x.round-y.round;
+  });
+  var head=(roundOn()?['Round']:[]).concat(['Team &uarr;','Assigned','Referred','Age','Status','Position','Referred by','Assigned by','']);
+  var rows=list.map(function(r){
+    var s=urg(r);
+    return '<tr>'+
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round)+'</td>':'')+
+      '<td style="color:var(--ink);font-weight:500">'+r.team+'</td>'+
+      '<td>'+(r.assigned? person(r.assigned):'<span class="dash">&mdash;</span>')+'</td>'+
+      '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
+      '<td>'+ageCell(s,'word')+'</td>'+
+      '<td>'+statusChip(r.status)+'</td>'+
+      '<td>'+positionChip(r.position)+'</td>'+
+      '<td>'+r.by+'</td>'+
+      '<td>'+(r.assignedBy||'<span class="dash">&mdash;</span>')+'</td>'+
+      '<td class="kebab">'+KEBAB+'</td></tr>';
+  }).join('');
+  document.getElementById('page').innerHTML=
+   '<div class="crumb">Applications &rsaquo; '+a.id+'</div>'+
+   '<div class="page-head"><div class="page-title">'+BACK+'Referrals</div>'+
+   '<button class="btn-out">'+SEND+'Refer</button></div><div class="page-sub">'+a.id+' &middot; '+a.addr+'</div>'+
+   '<div style="height:16px"></div>'+
+   '<div class="panel">'+SEARCHBAR+'<table class="t">'+TH(head)+'<tbody>'+rows+'</tbody></table></div>';
+}
+
+/* ============================================================
+   SCREEN 5 — TECHNICAL TEAM INBOX (Heritage, unassigned)
+   ============================================================ */
+function queue(){
+  return ALLREFS.filter(function(r){ return r.team===INBOX_TEAM && r.status==='unassigned'; })
+                .sort(function(a,b){ return a.sent-b.sent; });
+}
+function refKey(r){ return r.appRef.id+'#'+r.round; }
+function refByKey(k){ var f=null; ALLREFS.forEach(function(r){ if(refKey(r)===k) f=r; }); return f; }
+function priorRounds(r){
+  return r.appRef.refs.filter(function(x){ return x.team===r.team && x.round<r.round; })
+                      .sort(function(a,b){return a.round-b.round;});
+}
+function priorOfficer(r){
+  var p=priorRounds(r);
+  for(var i=p.length-1;i>=0;i--){ if(p[i].assigned) return p[i].assigned; }
+  return null;
+}
+
+function renderInbox(){
+  document.getElementById('page').innerHTML=
+    '<div class="crumb">Teams</div>'+
+    '<div class="page-title">'+BACK+'Heritage</div>'+
+    '<div class="page-sub">Performance term: '+TEAMS[INBOX_TEAM].kpi+' days</div>'+
+    '<div style="height:16px"></div>'+
+    '<div class="panel">'+
+      '<div class="tabs">'+
+        '<button class="tab on">Unassigned</button><button class="tab">Assigned</button>'+
+        '<button class="tab">Completed</button><button class="tab">Team members</button>'+
+        '<span class="spacer"><button class="btn-primary" id="btn-assign" disabled>Assign</button></span>'+
+      '</div>'+
+      '<div class="tbar">'+SEARCH+FILTER+'</div>'+
+      '<div id="tablewrap"></div>'+
+    '</div>';
+  drawQueue();
+}
+function drawQueue(){
+  TTREG=[];
+  var head=(roundOn()?['Round']:[]).concat(['Referred','Age','Application','Address','Referred by','']);
+  var rows=queue().map(function(r){
+    var s=urg(r), g=null;
+    teamGroups(r.appRef).forEach(function(x){ if(x.team===r.team) g=x; });
+    var k=refKey(r);
+    return '<tr class="'+(SEL===k?'sel':'')+'" data-row="'+k+'">'+
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round,roundHistoryTip(g))+'</td>':'')+
+      '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
+      '<td>'+ageCell(s,'state')+'</td>'+
+      '<td><span class="appid">'+r.appRef.id+COPY+'</span></td>'+
+      '<td>'+r.appRef.addr+'</td>'+
+      '<td>'+person(r.by)+'</td>'+
+      '<td class="kebab">'+KEBAB+'</td></tr>';
+  }).join('');
+  document.getElementById('tablewrap').innerHTML='<table class="t">'+TH(head)+'<tbody>'+rows+'</tbody></table>';
+  var b=document.getElementById('btn-assign'); if(b) b.disabled=!SEL;
+}
+
+/* ---------- referral detail rail ---------- */
+function sec(title,body,closed){
+  return '<div class="sec '+(closed?'closed':'')+'"><div class="sec-h" data-sec="1"><span class="sec-t">'+title+'</span>'+
+    CHEV+'</div><div class="sec-b">'+body+'</div></div>';
+}
+function openPanel(k){
+  var r=refByKey(k); if(!r){ closePanel(); return; }
+  SEL=k;
+  var s=urg(r);
+  var clock='<div class="kv"><dt>Age</dt><dd>'+ageCell(s,'')+'</dd></div>'+
+    '<div class="kv"><dt>Team KPI</dt><dd>'+s.kpi+' days</dd></div>'+
+    '<div class="kv"><dt>Due</dt><dd>'+fmt(s.dueDate)+'</dd></div>';
+
+  document.getElementById('rail-in').innerHTML=
+    '<div class="rail-top"><button class="btn-out" data-close="1">Close</button></div>'+
+    sec('Referral detail',
+        '<div class="req"><div class="req-t">Referral request</div><div class="req-x">'+r.req+'</div>'+
+        '<div class="req-m">'+fmt(shift(TODAY,-r.sent))+' &middot; '+r.by+'</div></div>'+
+        (urgOn()? '<div style="margin-top:10px">'+clock+'</div>':''))+
+    sec('Application detail','<div class="kv"><dt>Application</dt><dd>'+r.appRef.id+'</dd></div>'+
+        '<div class="kv"><dt>Address</dt><dd>'+r.appRef.addr+'</dd></div>'+
+        '<div class="kv"><dt>Application type</dt><dd>Development application</dd></div>'+
+        '<div class="kv"><dt>Referred by</dt><dd>'+r.by+'</dd></div>',true)+
+    sec('Documents (9)','',true)+sec('File note','',true);
+  document.getElementById('rail').classList.add('on');
+  drawQueue();
+}
+function closePanel(){ SEL=null; document.getElementById('rail').classList.remove('on');
+  if(SCREEN==='inbox') drawQueue(); }
+
+/* ---------- assign dialog ---------- */
+var PICK=null;
+function memberRow(n,isPrev){
+  var m=MEMBERS[n], dis=(m.av!=='available'), chips='';
+  if(m.role)           chips+=' <span class="chip c-admin">'+m.role+'</span>';
+  if(m.av==='away')    chips+=' <span class="chip c-away">Away</span>';
+  if(m.av==='blocked') chips+=' <span class="chip c-blocked">Blocked</span>';
+  return '<div class="m-row'+(isPrev?' prev':'')+(dis?' dis':'')+(PICK===n?' sel':'')+'" '+
+    (dis?'':'data-pick="'+n+'"')+'>'+avatar(n,true,true)+
+    '<div class="m-name">'+n+chips+'</div>'+
+    '<div class="m-right">'+MTICK+'<span class="m-count">'+m.open+'</span></div></div>';
+}
+function drawModal(){
+  var r=refByKey(SEL); if(!r) return;
+  var prev = roundOn()? priorOfficer(r) : null;
+  var rest=Object.keys(MEMBERS).filter(function(n){ return n!==prev && MEMBERS[n].av!=='inactive'; }).sort();
+  var head='<div class="modal"><div class="m-head"><span class="m-grip"><i></i><i></i><i></i><i></i><i></i><i></i></span>'+
+    '<span class="m-title">Assign referral'+(roundOn()&&r.round>=2? roundChip(r.round):'')+'</span>'+
+    '<button class="m-x" data-mclose="1">&times;</button></div>';
+  var body='';
+  if(prev){
+    body+='<div class="m-sec">Previously assigned</div>'+memberRow(prev,true);
+    if(MEMBERS[prev].av!=='available'){
+      body+='<div class="m-note">'+prev.split(' ')[0]+' is unavailable &mdash; choose another team member.</div>';
+    }
+  }
+  body+='<div class="m-sec">'+(prev?'Other team members':'Team members')+'</div>'+
+        rest.map(function(n){return memberRow(n,false);}).join('');
+  var foot='<div class="m-foot"><button class="btn-flat" data-mclose="1">Cancel</button>'+
+    '<button class="btn-go" '+(PICK?'':'disabled')+' data-go="1">Assign now</button></div></div>';
+  document.getElementById('modal').innerHTML=head+'<div class="m-list">'+body+'</div>'+foot;
+}
+function openModal(){
+  var r=refByKey(SEL); if(!r) return;
+  var prev = roundOn()? priorOfficer(r) : null;
+  PICK = (prev && MEMBERS[prev] && MEMBERS[prev].av==='available') ? prev : null;
+  drawModal();
+  document.getElementById('mask').classList.add('on');
+  document.body.classList.add('locked');
+}
+function closeModal(){
+  document.getElementById('mask').classList.remove('on');
+  document.body.classList.remove('locked');
+  PICK=null;
+}
+var LAST=null,TQ=null;
+function toast(h){var t=document.getElementById('toast');t.innerHTML=h;t.classList.add('on');
+  clearTimeout(TQ);TQ=setTimeout(function(){t.classList.remove('on');},5000);}
+function commit(){
+  if(!PICK||!SEL) return;
+  var r=refByKey(SEL); if(!r) return;
+  LAST={r:r,name:PICK};
+  r.status='awaiting'; r.assigned=PICK; r.assignedBy='Tanya Boateng';
+  if(MEMBERS[PICK]) MEMBERS[PICK].open++;
+  var app=r.appRef.id, name=PICK;
+  closeModal(); closePanel();
+  toast(TICK+'<span>'+app+' assigned to <b>'+name+'</b></span><button class="undo" data-undo="1">Undo</button>');
+}
+
+/* ============================================================
+   SCREEN SWITCH + EVENTS
+   ============================================================ */
+function renderScreen(){
+  document.getElementById('rail').classList.remove('on');
+  SEL=null;
+  var navMap={dash:'dash',apps:'apps',ov:'apps',all:'all',inbox:'inbox'};
+  document.querySelectorAll('.sidebar-item[data-nav]').forEach(function(b){
+    b.classList.toggle('active', navMap[SCREEN]===b.dataset.nav);
+  });
+  if(SCREEN==='dash')      renderDash();
+  else if(SCREEN==='apps') renderApps();
+  else if(SCREEN==='ov')   renderOv();
+  else if(SCREEN==='all')  renderAll();
+  else                     renderInbox();
+  window.scrollTo(0,0);
+}
+function setScreen(v){
+  SCREEN=v;
+  document.querySelectorAll('#seg-screen button').forEach(function(x){x.classList.toggle('on',x.dataset.screen===v);});
+  renderScreen();
+}
+document.getElementById('seg-screen').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return; setScreen(b.dataset.screen);
+});
+document.getElementById('seg-mode').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#seg-mode button').forEach(function(x){x.classList.remove('on');});
+  b.classList.add('on'); MODE=b.dataset.mode; renderScreen();
+});
+document.querySelectorAll('.sidebar-item[data-nav]').forEach(function(b){
+  b.addEventListener('click',function(){
+    setScreen(b.dataset.nav==='apps'?'apps':b.dataset.nav);
+  });
+});
+document.addEventListener('click',function(e){
+  var u=e.target.closest('[data-undo]');
+  if(u){ if(LAST){ LAST.r.status='unassigned'; LAST.r.assigned=null; LAST.r.assignedBy=null;
+                   if(MEMBERS[LAST.name]) MEMBERS[LAST.name].open--; LAST=null; renderScreen(); }
+         document.getElementById('toast').classList.remove('on'); return; }
+  if(e.target.closest('[data-go]')){ commit(); return; }
+  var pk=e.target.closest('[data-pick]');
+  if(pk){ PICK=pk.dataset.pick; drawModal(); return; }
+  if(e.target.closest('[data-mclose]')){ closeModal(); return; }
+  if(e.target.id==='mask'){ closeModal(); return; }
+  if(e.target.closest('#btn-assign')){ openModal(); return; }
+  var gt=e.target.closest('[data-goto]');
+  if(gt){ setScreen(gt.dataset.goto); return; }
+  var s=e.target.closest('[data-sec]');
+  if(s){ s.parentNode.classList.toggle('closed'); return; }
+  if(e.target.closest('[data-close]')){ closePanel(); return; }
+  var rw=e.target.closest('[data-row]');
+  if(rw){ openPanel(rw.dataset.row); return; }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(document.getElementById('mask').classList.contains('on')) closeModal();
+    else closePanel();
+  }
+});
+
+/* ============================================================
+   KEY PANEL — one legend, sectioned by concept
+   ============================================================ */
+var kp=document.getElementById('keypanel');
+function chipRow(cls,icon,label,sub){
+  return '<div class="key-row"><span><span class="stchip '+cls+'">'+icon+label+'</span></span><span>'+sub+'</span></div>';
+}
+function ageRow(cls,icon,label,sub){
+  return '<div class="key-row"><span><span class="agecell '+cls+'">'+icon+label+'</span></span><span>'+sub+'</span></div>';
+}
+kp.innerHTML=
+ '<div class="key-h">Urgency &mdash; aggregate cell on an application row</div>'+
+ chipRow('st-notstarted','','Not started (2)','No team has responded yet; none inside a warning window.')+
+ chipRow('st-progress',PLAY,'In progress (2/6)','Some teams done; none inside a warning window.')+
+ chipRow('st-soon',CLOCK,'In progress (2/6)','At least one team due soon. Clock icon, orange outline.')+
+ chipRow('st-today',CIRC,'In progress (2/6)','At least one team due today.')+
+ chipRow('st-overdue',TRI,'In progress (2/6)','At least one team overdue. Warning triangle, red outline.')+
+ chipRow('st-complete',TICK,'Complete (6/6)','Every team has responded or closed.')+
+ '<div class="key-h" style="margin-top:12px">Urgency &mdash; referral row: the age carries it</div>'+
+ ageRow('','','9 days','Inside KPI, outside the warning window. No icon.')+
+ ageRow('ag-soon',CLOCK,'13 days','Due soon &mdash; inside that team&rsquo;s warning window.')+
+ ageRow('ag-today',CIRC,'14 days','Due today.')+
+ ageRow('ag-overdue',TRI,'20 days','Overdue.')+
+ '<div class="key-h" style="margin-top:12px">Round &mdash; the re-referral signal</div>'+
+ '<div class="key-row"><span>'+roundChip(3)+'</span><span>The 3rd time this application has been referred to this team. Indigo from round 2 up &mdash; deliberately not green, because green means done or supported.</span></div>'+
+ '<div class="key-row"><span>'+roundChip(1)+'</span><span>First referral. Neutral on every screen.</span></div>'+
+ '<div class="key-row"><span>Hover a chip</span><span>Every prior round: date, officer, position.</span></div>'+
+ '<div class="key-f">'+
+ '<b>How the two fit together.</b> One referral record per round. Urgency answers <i>how late is it</i>; round answers <i>how many times have we seen it</i>. '+
+ 'Only a team&rsquo;s latest round carries a clock &mdash; earlier rounds show turnaround. The application row counts <b>teams</b>, not rounds, so a historic completion can never bury a live overdue round.<br/><br/>'+
+ '<b>Due date</b> = date referred + team KPI, in calendar days. Warning window is set per team; council default '+DEFAULT_WARN+' days.<br/><br/>'+
+ '<b>Known gap, preserved deliberately (7.1).</b> An unassigned round shows no warning at all for its whole KPI window, then jumps straight to overdue. Heritage on DA456229 sits at 18 days against a 21-day KPI and says nothing; DA974289 at 24 days is red. That cliff is the current model, not a design decision.'+
+ '</div>';
+document.getElementById('btn-key').addEventListener('click',function(){
+  var o=kp.classList.toggle('open');
+  document.getElementById('btn-key').classList.toggle('on',o);
+});
+
+/* ---------- access gate (courtesy screen, not security) ---------- */
+(function(){
+  var PW='objective2026';
+  var gate=document.getElementById('gate'),pw=document.getElementById('gate-pw'),
+      go=document.getElementById('gate-go'),err=document.getElementById('gate-err');
+  document.body.classList.add('locked');
+  setTimeout(function(){pw.focus();},60);
+  function attempt(){
+    if(pw.value.trim().toLowerCase()===PW){gate.classList.add('done');document.body.classList.remove('locked');return;}
+    err.classList.add('show');pw.classList.add('bad');pw.select();
+  }
+  go.addEventListener('click',attempt);
+  pw.addEventListener('keydown',function(e){if(e.key==='Enter')attempt();});
+  pw.addEventListener('input',function(){err.classList.remove('show');pw.classList.remove('bad');});
+})();
+
+renderScreen();
+</script>
+<script src="https://build-au-feedback-widget.vercel.app/feedback-widget.js"></script>
+</body>
+</html>

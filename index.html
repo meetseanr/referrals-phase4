@@ -237,6 +237,7 @@ table.mini .rnd{width:34px;padding-right:8px}
 .rail.on{width:420px;flex:0 0 420px}
 .rail-in{width:420px;height:100%;overflow-y:auto;padding-bottom:30px}
 .rail-top{display:flex;justify-content:flex-end;padding:12px 18px;background:#fbfbfc;border-bottom:1px solid var(--border-light)}
+.rail-top.act{justify-content:space-between;gap:10px}
 .sec{border-bottom:1px solid var(--border-light)}
 .sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;cursor:pointer}
 .sec-t{font-size:13px;font-weight:600;color:var(--ink)}
@@ -361,6 +362,15 @@ table.mini .rnd{width:34px;padding-right:8px}
 .rq-t{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
 .rq-x{font-size:12px;color:var(--ink-med)}
 .rq-m{font-size:11px;color:var(--ink-light);margin-top:6px}
+.rq-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rq-cur{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--round);
+  background:#fff;border:1px solid var(--round-soft);border-radius:3px;padding:1px 5px}
+.rq-list{margin-bottom:14px}
+.rq-list .rq{margin-bottom:8px}
+.rq-list .rq.past{background:#fbfbfc;border:1px solid var(--border-light)}
+.rq-list .rq.past .rq-t{color:var(--ink-med)}
+.rq-list .rq.past .rq-x{color:var(--ink-light)}
+.rev-sec .rq{margin:0}
 .rkv{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin-bottom:4px}
 .rkv .k{font-size:11px;color:var(--ink-light);margin-bottom:2px}
 .rkv .v{font-size:12.5px;color:var(--ink-med)}
@@ -474,6 +484,12 @@ body.locked{overflow:hidden}
         <button data-mode="today">Today</button>
         <button data-mode="urgency">Urgency</button>
         <button data-mode="both" class="on">Urgency + re-referrals</button>
+      </div>
+    </div>
+    <div class="ctrl-group hidden" id="grp-req"><span class="ctrl-label">Requests</span>
+      <div class="seg" id="seg-req">
+        <button data-req="rail" class="on">Stacked in rail</button>
+        <button data-req="round">In each round</button>
       </div>
     </div>
     <div class="ctrl-group hidden" id="grp-role"><span class="ctrl-label">Viewing as</span>
@@ -592,25 +608,25 @@ var APPS=[
   focus:true,
   refs:[
    {team:'Environmental Health',round:1,assigned:'Jai Kumar',sent:96,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Karen Molloy',turnaround:8,
-    req:'Acoustic and waste assessment for the original scheme.'},
+    req:'Please assess contamination risk for the former workshop use and confirm the waste storage is adequate.'},
    {team:'Environmental Health',round:2,assigned:'Jai Kumar',sent:17,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Karen Molloy',turnaround:null,
-    req:'Re-referred following the RFI response &mdash; revised waste storage.'},
+    req:'Re-referred following the RFI response &mdash; revised waste storage layout and an updated acoustic report.'},
    {team:'Traffic & Transport',round:1,assigned:'Chrissie Curtis',sent:14,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Bruce Tan',turnaround:null,
     req:'Parking provision and vehicle access.'},
    {team:'Building Surveyor',round:1,assigned:'Tom Whelan',sent:4,status:'awaiting',position:null,by:'Sean Richards',assignedBy:'Leah Doyle',turnaround:null,
     req:'BCA capability statement.'},
    {team:'Heritage',round:1,assigned:'Daniel Cho',sent:175,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:14,
-    req:'Heritage impact statement &mdash; original submission.'},
+    req:'First referral. Heritage impact statement submitted with the original scheme. The property sits within the Paddington South HCA.'},
    {team:'Heritage',round:2,assigned:'Anu Ponugoti',sent:67,status:'complete',position:'Not supported',by:'Sean Richards',assignedBy:'Tanya Boateng',turnaround:9,
-    req:'Amended roof form following the first heritage response.'},
+    req:'Amended roof form following the heritage response of 20 March. Ridge height and the skillion addition have both changed.'},
    {team:'Heritage',round:3,assigned:null,sent:2,status:'unassigned',position:null,by:'Sean Richards',assignedBy:null,turnaround:null,inbound:true,
-    req:'Amended heritage impact statement attached. Please review the revised roof form.'},
+    req:'Amended heritage impact statement attached. Please review the revised roof form against the position taken at round 2.'},
    {team:'Landscaping',round:1,assigned:'Alicia Prasad',sent:108,status:'complete',position:'Not supported',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:22,
-    req:'Deep soil and canopy cover against Part C3 of the DCP.'},
+    req:'First referral. Please assess the landscape plan against Part C3 of the DCP &mdash; deep soil, canopy cover and street tree retention.'},
    {team:'Landscaping',round:2,assigned:'Alicia Prasad',sent:51,status:'complete',position:'RFI/Design changes',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:12,
-    req:'Amended landscape plan following the first RFI.'},
+    req:'Amended landscape plan received in response to RFI item 3. Please confirm whether the deep soil and canopy shortfalls are resolved.'},
    {team:'Landscaping',round:3,assigned:'Alicia Prasad',sent:2,status:'responded',position:'Supported',by:'Sean Richards',assignedBy:'Gail Hurst',turnaround:2,
-    req:'Second amended landscape plan. Deep soil and species schedule revised.'},
+    req:'Second amended landscape plan. Deep soil lifted to 16% and the species schedule revised for the southern aspect. Please confirm the position.'},
    {team:'Stormwater',round:1,assigned:'Dave Tran',sent:6,status:'complete',position:'Supported',by:'Sean Richards',assignedBy:'Bruce Tan',turnaround:6,
     req:'On-site detention sizing.'}
   ]},
@@ -1100,7 +1116,7 @@ function renderAll(){
   var head=(roundOn()?['Round']:[]).concat(['Team &uarr;','Assigned','Referred','Age','Status','Position','Referred by','Assigned by','']);
   var rows=list.map(function(r){
     var s=urg(r);
-    return '<tr data-openreview="'+r.team+'">'+
+    return '<tr class="'+(ALLSEL===allKey(r)?'sel':'')+'" data-refrow="'+allKey(r)+'">'+
       (roundOn()? '<td class="rndcol">'+roundChip(r.round)+'</td>':'')+
       '<td style="color:var(--ink);font-weight:500">'+r.team+'</td>'+
       '<td>'+(r.assigned? person(r.assigned):'<span class="dash">&mdash;</span>')+'</td>'+
@@ -1120,6 +1136,39 @@ function renderAll(){
    '<div class="panel">'+SEARCHBAR+'<table class="t">'+TH(head)+'<tbody>'+rows+'</tbody></table></div>';
 }
 
+/* ---------- screen 4: referral detail panel ----------
+   Selecting a row opens the panel; the panel is the way through to the
+   referral review thread, so the list stays a list. */
+var ALLSEL=null;
+function allKey(r){ return r.team+'#'+r.round; }
+function refByAllKey(k){ var f=null; FOCUS.refs.forEach(function(r){ if(allKey(r)===k) f=r; }); return f; }
+
+function openAllPanel(k){
+  var r=refByAllKey(k); if(!r){ closePanel(); return; }
+  ALLSEL=k;
+  var s=urg(r);
+  /* Same rail as the team inbox: the request, then the clock. Everything
+     else about the round is one click away in the review thread. */
+  var clock='<div class="kv"><dt>Age</dt><dd>'+ageCell(s,'')+'</dd></div>'+
+    '<div class="kv"><dt>Team KPI</dt><dd>'+s.kpi+' days</dd></div>'+
+    '<div class="kv"><dt>Due</dt><dd>'+fmt(s.dueDate)+'</dd></div>';
+  document.getElementById('rail-in').innerHTML=
+    '<div class="rail-top act">'+
+      '<button class="btn-primary" data-toreview="'+r.team+'" data-atround="'+r.round+'">Open referral review</button>'+
+      '<button class="btn-out" data-close="1">Close</button></div>'+
+    sec('Referral detail',
+        '<div class="req"><div class="req-t">Referral request</div><div class="req-x">'+r.req+'</div>'+
+        '<div class="req-m">'+fmt(shift(TODAY,-r.sent))+' &middot; '+r.by+'</div></div>'+
+        (urgOn()? '<div style="margin-top:10px">'+clock+'</div>':''))+
+    sec('Application detail','<div class="kv"><dt>Application</dt><dd>'+FOCUS.id+'</dd></div>'+
+        '<div class="kv"><dt>Address</dt><dd>'+FOCUS.addr+'</dd></div>'+
+        '<div class="kv"><dt>Application type</dt><dd>Development application</dd></div>'+
+        '<div class="kv"><dt>Referred by</dt><dd>'+r.by+'</dd></div>',true)+
+    sec('Documents (9)','',true)+sec('File note','',true);
+  document.getElementById('rail').classList.add('on');
+  renderAll();
+}
+
 /* ============================================================
    SCREEN 5 — TECHNICAL TEAM INBOX (Heritage, unassigned)
    ============================================================ */
@@ -1127,7 +1176,7 @@ function queue(){
   return ALLREFS.filter(function(r){ return r.team===INBOX_TEAM && r.status==='unassigned'; })
                 .sort(function(a,b){ return a.sent-b.sent; });
 }
-function refKey(r){ return r.appRef.id+'#'+r.round; }
+function refKey(r){ return r.appRef.id+'#'+r.team+'#'+r.round; }
 function refByKey(k){ var f=null; ALLREFS.forEach(function(r){ if(refKey(r)===k) f=r; }); return f; }
 function priorRounds(r){
   return r.appRef.refs.filter(function(x){ return x.team===r.team && x.round<r.round; })
@@ -1203,8 +1252,12 @@ function openPanel(k){
   document.getElementById('rail').classList.add('on');
   drawQueue();
 }
-function closePanel(){ SEL=null; document.getElementById('rail').classList.remove('on');
-  if(SCREEN==='inbox') drawQueue(); }
+function closePanel(){
+  SEL=null; ALLSEL=null;
+  document.getElementById('rail').classList.remove('on');
+  if(SCREEN==='inbox') drawQueue();
+  else if(SCREEN==='all') renderAll();
+}
 
 /* ---------- assign dialog ---------- */
 var PICK=null;
@@ -1332,6 +1385,31 @@ function partyBlock(title,role,entry,editable,emptyMsg,rnum){
   return '<div class="rev-sec'+(shut?' shut':'')+'">'+head+'<div class="rev-bd">'+body+'</div></div>';
 }
 
+/* The referral request is the opening move of a round. It can sit in the
+   rail as a stacked list of every round's request, or inside the round it
+   belongs to. Both are built so the two can be compared. */
+var REQMODE='rail';   /* rail | round */
+
+function requestBlock(r){
+  var key=r.round+'|request', shut=(SECSHUT[key]===true);
+  return '<div class="rev-sec'+(shut?' shut':'')+'">'+
+    '<div class="rev-h" data-party="'+key+'">'+CHEV+'<span>Referral request</span>'+
+    stamp(r.by,fmt(shift(TODAY,-r.sent)))+'</div>'+
+    '<div class="rev-bd"><div class="robox">'+r.req+'</div></div></div>';
+}
+function requestList(g,live){
+  var desc=g.rounds.slice().sort(function(x,y){return y.round-x.round;});
+  return '<div class="rq-list">'+desc.map(function(r){
+    var cur=(r.round===live.round);
+    return '<div class="rq'+(cur?'':' past')+'">'+
+      '<div class="rq-h">'+(roundOn()? roundChip(r.round):'')+
+      '<span class="rq-t">Referral request</span>'+
+      (cur&&roundOn()? '<span class="rq-cur">Current</span>':'')+'</div>'+
+      '<div class="rq-x">'+r.req+'</div>'+
+      '<div class="rq-m">'+fmt(shift(TODAY,-r.sent))+' &middot; '+r.by+'</div></div>';
+  }).join('')+'</div>';
+}
+
 function roundBody(r,isLive){
   var rv=reviewOf(r);
   var sp=rv?rv.specialist:null, plr=rv?rv.planner:null;
@@ -1346,7 +1424,8 @@ function roundBody(r,isLive){
   if(DRAFT.submitted && isLive && ROLE==='planner'){
     plr={by:'Sean Richards', at:'28 Aug 2026, 6:41 PM', position:DRAFT.pos, text:DRAFT.text};
   }
-  return partyBlock('Planner review','planner',plr,plannerEditable,plEmpty,r.round)+
+  return (REQMODE==='round'? requestBlock(r):'')+
+         partyBlock('Planner review','planner',plr,plannerEditable,plEmpty,r.round)+
          partyBlock('Specialist response','specialist',sp,specialistEditable,spEmpty,r.round);
 }
 
@@ -1403,9 +1482,8 @@ function renderReview(){
     : fmt(s.dueDate);
   var side='<aside class="panel rv-side">'+
     '<div class="rsc-h">Resources</div>'+
-    sec('Referral details',
-      '<div class="rq"><div class="rq-t">Referral request</div><div class="rq-x">'+live.req+'</div>'+
-      '<div class="rq-m">'+fmt(shift(TODAY,-live.sent))+' &middot; '+live.by+'</div></div>'+
+    sec(REQMODE==='rail'? 'Referral details' : 'Round details',
+      (REQMODE==='rail'? requestList(g,live):'')+
       kv2('Team',g.team,'Assigned to',live.assigned||'&mdash;')+
       kv2('Due date',due,'Age',isOpen(live)? pl(live.sent,'day') : pl(live.turnaround,'day')+' to respond')+
       '<div class="rkv"><div><div class="k">Status</div><div class="v">'+statusChip(live.status)+'</div></div>'+
@@ -1436,9 +1514,10 @@ function renderReview(){
    ============================================================ */
 function renderScreen(){
   document.getElementById('rail').classList.remove('on');
-  SEL=null;
+  SEL=null; ALLSEL=null;
   var navMap={dash:'dash',apps:'apps',ov:'apps',all:'all',review:'all',inbox:'inbox'};
   document.getElementById('grp-role').classList.toggle('hidden',SCREEN!=='review');
+  document.getElementById('grp-req').classList.toggle('hidden',SCREEN!=='review');
   document.querySelectorAll('.sidebar-item[data-nav]').forEach(function(b){
     b.classList.toggle('active', navMap[SCREEN]===b.dataset.nav);
   });
@@ -1457,6 +1536,11 @@ function setScreen(v){
 }
 document.getElementById('seg-screen').addEventListener('click',function(e){
   var b=e.target.closest('button'); if(!b) return; setScreen(b.dataset.screen);
+});
+document.getElementById('seg-req').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#seg-req button').forEach(function(x){x.classList.remove('on');});
+  b.classList.add('on'); REQMODE=b.dataset.req; grabEditor(); renderReview();
 });
 document.getElementById('seg-role').addEventListener('click',function(e){
   var b=e.target.closest('button'); if(!b) return;
@@ -1485,6 +1569,13 @@ document.addEventListener('click',function(e){
   if(e.target.closest('[data-mclose]')){ closeModal(); return; }
   if(e.target.id==='mask'){ closeModal(); return; }
   if(e.target.closest('#btn-assign')){ openModal(); return; }
+  var trv=e.target.closest('[data-toreview]');
+  if(trv){ RVIEW.team=trv.dataset.toreview; SHUT={}; SECSHUT={};
+           DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
+           if(trv.dataset.atround) SHUT[+trv.dataset.atround]=false;   /* land on the round you picked */
+           closePanel(); setScreen('review'); return; }
+  var arw=e.target.closest('[data-refrow]');
+  if(arw){ openAllPanel(arw.dataset.refrow); return; }
   var orv=e.target.closest('[data-openreview]');
   if(orv){ RVIEW.team=orv.dataset.openreview; SHUT={}; SECSHUT={}; DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
            setScreen('review'); return; }

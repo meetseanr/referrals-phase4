@@ -129,32 +129,53 @@ table.t tbody tr.sel td{background:#eef6fd}
 .who-name{font-size:12px;color:var(--ink-med)}
 
 /* ---------- ROUND CHIP (re-referral signal) ----------
-   Neutral at round 1, indigo from round 2 up. Never green:
-   green means done / supported everywhere else in Build. */
+   A monotone ramp, not a hue. Round is an ORDINAL — more rounds means more
+   history, not a different kind of thing — so it reads as one chip getting
+   heavier, and it spends no colour that urgency, position or status needs.
+   Ink flips to white at round 4, which is where the escalation should
+   start being uncomfortable to look at. Every step clears 4.5:1. */
 .rrb{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;
-  border-radius:4px;background:var(--round);color:#fff;font-size:11px;font-weight:700;line-height:1;
-  font-variant-numeric:tabular-nums}
-.rrb.one{background:var(--neutral-bg);color:var(--ink-light);font-weight:600}
+  border-radius:4px;font-size:11px;font-weight:600;line-height:1;
+  font-variant-numeric:tabular-nums;background:#f2f2f7;color:#8e8e93}
+.rrb.r1{background:#f2f2f7;color:#8e8e93}
+.rrb.r2{background:#e0e0e5;color:#5c5c61}
+.rrb.r3{background:#c2c2c8;color:#3a3a3d;font-weight:700}
+.rrb.r4{background:#6e6e73;color:#fff;font-weight:700}
+.rrb.r5{background:#48484d;color:#fff;font-weight:700}
+/* Priority overrides the ramp. The number stays, the ordinal darkness does
+   not — a flagged referral trades 'how many times' for 'work this first'.
+   That trade is the reason the row edge is still there in every view mode:
+   the Round column is dropped in Today and Urgency, and priority must not
+   be a thing that only exists in one of the three. */
+.rrb.prio{background:#c9302c;color:#fff;font-weight:700}
 
 /* ---------- STATUS / PROGRESS CHIPS ----------
    Base chip = referral progress, exactly as the product shows it today.
-   Urgency overrides the chip colour and the leading icon only. Words never change. */
+   Urgency overrides the chip colour and the leading icon only. Words never change.
+
+   SUBDUED (phase 4 refinement). The urgency chips previously carried a
+   1.5px coloured outline and a 600 weight on top of a saturated fill —
+   three signals for one state, on a screen where most rows are not urgent.
+   The outline is gone across the whole chip family, the fills are lighter
+   and the weight is back to 500. The ICON now does the work of separating
+   due soon / due today / overdue, which is also the only part of the
+   signal that survives for a colour-blind reader. */
 .stchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
   padding:2px 8px;border-radius:4px;white-space:nowrap;line-height:1.45}
 .stchip svg{width:10px;height:10px;flex:0 0 10px}
 .st-notstarted{background:#f2f2f7;color:#86868b}
-.st-progress{background:#fdf7e6;color:#8a6d00;box-shadow:inset 0 0 0 1px #f0e3b8}
-.st-progress svg{fill:#c9a227}
-.st-complete{background:#eafaf0;color:#1a7a32;box-shadow:inset 0 0 0 1px #cdeedb}
-.st-complete svg{fill:#1a7a32}
-.st-responded{background:#e8f1fb;color:#1a6fa0}
+.st-progress{background:#fbf5e4;color:#846a10}
+.st-progress svg{fill:#c2a03a}
+.st-complete{background:#ecf8f0;color:#22713a}
+.st-complete svg{fill:#3d9159}
+.st-responded{background:#eaf2fa;color:#22688f}
 .st-unassigned{background:#fff;box-shadow:inset 0 0 0 1px var(--border);color:#86868b}
-.st-soon{background:#fffaf1;color:#9a5000;box-shadow:inset 0 0 0 1.5px #f0c489;font-weight:600}
-.st-soon svg{fill:#d4790a}
-.st-today{background:#ffeeda;color:#9a5000;box-shadow:inset 0 0 0 1.5px #e8871f;font-weight:600}
-.st-today svg{fill:#d4790a}
-.st-overdue{background:#fdeae8;color:#b81d14;box-shadow:inset 0 0 0 1.5px #d94436;font-weight:600}
-.st-overdue svg{fill:#b81d14}
+.st-soon{background:#fbf5ea;color:#82632a}
+.st-soon svg{fill:#bb8836}
+.st-today{background:#faeedc;color:#8a5c22}
+.st-today svg{fill:#c07f2a}
+.st-overdue{background:#fbedeb;color:#a4392f}
+.st-overdue svg{fill:#c25146}
 
 /* position chips */
 .chip{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;white-space:nowrap;
@@ -228,7 +249,7 @@ table.mini th{text-align:left;font-size:9.5px;font-weight:600;text-transform:upp
 table.mini td{padding:9px 8px 9px 0;border-bottom:1px solid var(--border-light);color:var(--ink-med);vertical-align:middle}
 table.mini tr:last-child td{border-bottom:none}
 table.mini .team{color:var(--ink);font-weight:500}
-table.mini .rnd{width:34px;padding-right:8px}
+table.mini .rnd{width:48px;padding-right:8px}
 
 /* ---------- right rail (team inbox) ---------- */
 .rail{width:0;flex:0 0 0;overflow:hidden;transition:flex-basis .2s ease,width .2s ease;
@@ -353,6 +374,80 @@ table.mini .rnd{width:34px;padding-right:8px}
   color:var(--ink-med);background:#fff}
 .rev-empty{border:1px dashed var(--border);border-radius:7px;padding:14px 16px;font-size:12.5px;
   color:var(--ink-light);background:#fbfbfc}
+
+/* round tabs — Position / Conditions, directly beneath the round heading.
+   Same pattern as the conditions phase 3 prototype, so a viewer moving
+   between the two prototypes meets one referral review, not two. */
+.rnd-tabs{display:flex;gap:22px;padding:0 18px;border-bottom:1px solid var(--border-light);
+  align-items:center;background:#fff}
+.rtab{font-size:12.5px;padding:11px 0;color:var(--ink-light);cursor:pointer;border-bottom:2px solid transparent;
+  font-weight:500;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif}
+.rtab:hover{color:var(--ink-med)}
+.rtab.on{color:var(--link);border-bottom-color:var(--link);font-weight:600}
+.rnd-card.shut .rnd-tabs,.rnd-card.shut .rnd-tabs-wrap{display:none}
+
+/* conditions tab — shell only in this prototype. The working condition
+   set, inline placeholder filling and the completeness gate live in the
+   conditions phase 3 prototype; this shows where they attach. */
+.cbar{display:flex;align-items:center;gap:10px;padding:14px 0 4px}
+.cbar .sp{margin-left:auto}
+.cgrp{font-size:11px;font-weight:600;color:var(--ink-med);background:#fafafa;border:1px solid var(--border-light);
+  border-radius:6px;padding:7px 11px;margin:12px 0 7px;display:flex;align-items:center;gap:7px}
+.cgrp{cursor:pointer}
+.cgrp svg{width:11px;height:11px;fill:var(--ink-faint);flex:0 0 11px;transition:transform .15s}
+.cgrp.shut svg{transform:rotate(-90deg)}
+.cgrp .cnt{color:var(--ink-faint);font-weight:500}
+.crow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-light);
+  border-radius:7px;margin-bottom:6px;font-size:12.5px;color:var(--ink)}
+.crow .ct{font-weight:500}
+.crow .cr{margin-left:auto;display:flex;align-items:center;gap:12px}
+.ph{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:4px;
+  background:#f2f2f7;color:#86868b}
+.ph.out{background:#faeedc;color:#8a5c22}
+.c-std{background:var(--neutral-bg);color:var(--ink-light)}
+.c-mand{background:#eaf2fa;color:var(--link)}
+.c-cust{background:#f4eefb;color:#6b3fa0}
+.cond-empty{border:1px dashed var(--border);border-radius:7px;padding:18px 16px;font-size:12.5px;
+  color:var(--ink-light);background:#fbfbfc;text-align:center;margin-top:8px}
+.cond-foot{font-size:11px;color:var(--ink-faint);padding:12px 0 2px;line-height:1.5}
+
+/* ---------- PRIORITY ----------
+   Two marks, one meaning. The ROUND CHIP goes red where that column is on
+   screen — it is the densest thing in the row and it sits first, so the eye
+   lands on it. The ROW EDGE carries it everywhere, including the Today and
+   Urgency views where the Round column is dropped entirely.
+   Both are a different MECHANISM from urgency, which colours a chip and an
+   icon in the middle of the row: a referral that is both overdue and
+   priority still reads as two facts, not one louder one. */
+table.t tbody tr.prio{border-left-color:#d93025}
+table.t tbody tr.prio td{background:#fdf6f5}
+table.t tbody tr.prio:hover td{background:#fbeeed}
+table.t tbody tr.prio.sel{border-left-color:#d93025}
+table.t tbody tr.prio.sel td{background:#fbeceb}
+/* The round column is padded for every row, priority or not, so the chips
+   stay on one axis and the red edge has somewhere to sit. */
+table.mini th:first-child,table.mini td:first-child{padding-left:11px}
+table.mini tbody tr.prio td{background:#fdf6f5}
+table.mini tbody tr.prio td:first-child{box-shadow:inset 3px 0 0 #d93025}
+.rnd-card.prio{border-left:3px solid #d93025}
+
+/* ---------- row action menu ---------- */
+.kb{background:none;border:none;cursor:pointer;padding:2px 7px;border-radius:5px;color:var(--ink-faint);
+  font-size:15px;line-height:1;font-family:'Inter',sans-serif}
+.kb:hover{background:var(--neutral-bg);color:var(--ink-med)}
+#menu{position:fixed;z-index:420;background:#fff;border:1px solid var(--border);border-radius:9px;
+  box-shadow:var(--shadow-lg);padding:5px;min-width:222px;max-width:250px;display:none}
+#menu.on{display:block}
+.mi{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;font-size:12.5px;
+  color:var(--ink-med);cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif}
+.mi:hover{background:var(--bg)}
+.mi svg{width:12px;height:12px;fill:var(--ink-faint);flex:0 0 12px}
+.mi.red{color:#b81d14;font-weight:600}
+.mi.red svg{fill:#c0392b}
+.mi.off{color:var(--ink-faint);cursor:default}
+.mi.off:hover{background:none}
+.mi-note{font-size:10.5px;color:var(--ink-faint);padding:0 10px 7px 31px;line-height:1.45;white-space:normal}
+.mi-div{height:1px;background:var(--border-light);margin:4px 6px}
 
 /* resources rail */
 .rv-side .sec-h{padding:13px 16px}
@@ -492,6 +587,12 @@ body.locked{overflow:hidden}
         <button data-req="round">In each round</button>
       </div>
     </div>
+    <div class="ctrl-group hidden" id="grp-prio"><span class="ctrl-label">Priority permission</span>
+      <div class="seg" id="seg-prio">
+        <button data-prio="1" class="on">Can mark</button>
+        <button data-prio="0">No permission</button>
+      </div>
+    </div>
     <div class="ctrl-group hidden" id="grp-role"><span class="ctrl-label">Viewing as</span>
       <div class="seg" id="seg-role">
         <button data-role="planner" class="on">Planner</button>
@@ -508,6 +609,7 @@ body.locked{overflow:hidden}
 </div>
 
 <div class="mask" id="mask"><div id="modal"></div></div>
+<div id="menu"></div>
 <div id="tt"></div>
 <div id="keypanel"></div>
 <div id="toast"></div>
@@ -559,6 +661,10 @@ var BACK ='<svg class="back" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 
 var SEARCH='<svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 101-1l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>';
 var FILTER='<svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>';
 var KEBAB='<span style="color:var(--ink-faint)">&#8942;</span>';
+var FLAG ='<svg viewBox="0 0 16 16"><path d="M2.6 1h1.6v14H2.6V1zm2.6 1h8.6l-2.1 3.1L13.8 8.2H5.2V2z"/></svg>';
+var PEOPLE='<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
+var XICO  ='<svg viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+var EYE   ='<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>';
 
 /* ---------- people ---------- */
 var AVC={'Sean Richards':'#a33fa8','Nigel Paxton':'#2e9e5b','Hayley Stand':'#3f7ba8','Romina Iwikau':'#c0562e',
@@ -797,6 +903,25 @@ function rollup(app){
   return {groups:groups, counts:counts, worst:worst, done:counts.done, total:groups.length};
 }
 
+/* ============================================================
+   PRIORITY — a manual override on a single referral round.
+   It is NOT urgency. Urgency is derived (referred date + team KPI);
+   priority is asserted by a person who holds the permission, and it
+   says 'work this one next' regardless of what the clock says.
+   Held per round, because the round is the referral record.
+   ============================================================ */
+var PRIO={};        /* appId#team#round -> true */
+var CANPRIO=true;   /* concept control: does the current user hold the permission */
+function prioKey(r){ return r.appRef.id+'#'+r.team+'#'+r.round; }
+function isPrio(r){ return PRIO[prioKey(r)]===true; }
+function teamPrio(g){ var f=false; g.rounds.forEach(function(x){ if(isPrio(x)) f=true; }); return f; }
+/* Available only before a response exists: not started, not assigned, in progress.
+   Once a specialist has responded or the round is closed, priority has
+   nothing left to influence. */
+function prioEligible(r){ return r.status==='unassigned' || r.status==='awaiting'; }
+var PRIOTIP='<b>This referral is a priority</b>';
+function kebabBtn(k){ return '<button class="kb" data-menu="'+k+'">&#8942;</button>'; }
+
 /* ---------- view mode: today | urgency | both ---------- */
 var MODE='both', SCREEN='dash', SEL=null;
 function urgOn(){ return MODE!=='today'; }
@@ -828,19 +953,23 @@ function person(n){ return n? '<span class="who">'+avatar(n)+'<span class="who-n
 function chip(txt,cls,glyph){ if(!txt) return '<span class="dash">&mdash;</span>';
   return '<span class="chip '+cls+'">'+(glyph||'')+txt+'</span>'; }
 
-/* Round chip. Neutral at round 1, indigo from round 2 up, on every
-   screen. Green is reserved for done / supported. */
-function roundChip(n,tip){
-  return '<span class="rrb'+(n>=2?'':' one')+'"'+(tip||'')+'>'+n+'</span>';
+/* Round chip. A grey ramp: light at round 1, darkening to round 4 and
+   holding there. No hue, so it never competes with urgency or position. */
+function roundChip(n,tip,prio){
+  var step = n>=5? 5 : (n<1? 1 : n);
+  var t = tip||'';
+  if(prio && !t) t=' data-tt="'+reg(PRIOTIP)+'"';
+  return '<span class="rrb '+(prio? 'prio' : 'r'+step)+'"'+t+'>'+n+'</span>';
 }
-function roundHistoryTip(g){
-  if(g.count<2) return '';
+function roundHistoryTip(g,prio){
+  var pre = prio? PRIOTIP : '';
+  if(g.count<2) return prio? ' data-tt="'+reg(pre)+'"' : '';
   var lines=g.rounds.map(function(x){
     var outcome = x.position? ' &middot; '+x.position : (x.status==='unassigned'? ' &middot; Unassigned':'');
     return '<span class="r">Round '+x.round+' &middot; '+fmt(shift(TODAY,-x.sent))+' &middot; '+
            (x.assigned||'Unassigned')+outcome+'</span>';
   }).join('<br/>');
-  return ' data-tt="'+reg('<b>'+g.count+' referrals to '+g.team+'</b>'+lines)+'"';
+  return ' data-tt="'+reg(pre+'<b>'+g.count+' referrals to '+g.team+'</b>'+lines)+'"';
 }
 
 /* Aggregate referral cell on an application row.
@@ -943,9 +1072,9 @@ function renderDash(){
                         : ['Age','Referred','Referred by','Application','Address','Status'];
   var inRows=inbound.map(function(r){
     var s=urg(r);
-    return '<tr>'+
+    return '<tr'+(isPrio(r)?' class="prio"':'')+'>'+
       /* No round-chip hover on the dashboard — the chip is a count here, not a drill-in. */
-      (roundOn()? '<td class="rndcol">'+roundChip(r.round)+'</td>':'')+
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round,'',isPrio(r))+'</td>':'')+
       '<td>'+ageCell(s,'kpi')+'</td>'+
       '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
       '<td>'+person(r.by)+'</td>'+
@@ -1012,14 +1141,16 @@ function referralsCard(){
     var groups=teamGroups(a).slice().sort(function(x,y){return RANK[x.state.k]-RANK[y.state.k];});
     title='Referrals ('+groups.length+' teams)';
     body=groups.map(function(g){
-      return '<tr data-openreview="'+g.team+'"><td class="rnd"'+roundHistoryTip(g)+'>'+roundChip(g.count)+'</td>'+
+      var gp=teamPrio(g);
+      return '<tr'+(gp?' class="prio"':'')+' data-openreview="'+g.team+'">'+
+        '<td class="rnd"'+roundHistoryTip(g,gp)+'>'+roundChip(g.count,'',gp)+'</td>'+
         '<td class="team">'+g.team+'</td>'+
         '<td>'+ageCell(g.state,'word')+'</td>'+
         '<td>'+statusChip(g.latest.status)+'</td></tr>';
     }).join('');
     return '<div class="ov-card focus-panel"><div class="ov-head"><span class="ov-title">'+title+'</span>'+
       '<button class="btn-out">'+SEND+'Refer</button></div><div class="ov-body">'+hint+
-      '<table class="mini"><thead><tr><th class="rnd"></th><th>Team</th><th>Age</th><th>Status</th></tr></thead>'+
+      '<table class="mini"><thead><tr><th class="rnd">Round</th><th>Team</th><th>Age</th><th>Status</th></tr></thead>'+
       '<tbody>'+body+'</tbody></table>'+
       '<button class="btn-out btn-wide" data-goto="all">View all referrals</button></div></div>';
   }
@@ -1030,7 +1161,8 @@ function referralsCard(){
   title='Referrals ('+list.length+')';
   body=list.map(function(r){
     var s=urg(r);
-    return '<tr data-openreview="'+r.team+'"><td class="team">'+r.team+'</td>'+
+    return '<tr'+(isPrio(r)?' class="prio"':'')+' data-openreview="'+r.team+'">'+
+      '<td class="team">'+r.team+'</td>'+
       '<td>'+ageCell(s,'word')+'</td>'+
       '<td>'+statusChip(r.status)+'</td></tr>';
   }).join('');
@@ -1116,8 +1248,9 @@ function renderAll(){
   var head=(roundOn()?['Round']:[]).concat(['Team &uarr;','Assigned','Referred','Age','Status','Position','Referred by','Assigned by','']);
   var rows=list.map(function(r){
     var s=urg(r);
-    return '<tr class="'+(ALLSEL===allKey(r)?'sel':'')+'" data-refrow="'+allKey(r)+'">'+
-      (roundOn()? '<td class="rndcol">'+roundChip(r.round)+'</td>':'')+
+    var cls=(ALLSEL===allKey(r)?'sel ':'')+(isPrio(r)?'prio':'');
+    return '<tr class="'+cls+'" data-refrow="'+allKey(r)+'">'+
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round,'',isPrio(r))+'</td>':'')+
       '<td style="color:var(--ink);font-weight:500">'+r.team+'</td>'+
       '<td>'+(r.assigned? person(r.assigned):'<span class="dash">&mdash;</span>')+'</td>'+
       '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
@@ -1126,7 +1259,7 @@ function renderAll(){
       '<td>'+positionChip(r.position)+'</td>'+
       '<td>'+r.by+'</td>'+
       '<td>'+(r.assignedBy||'<span class="dash">&mdash;</span>')+'</td>'+
-      '<td class="kebab">'+KEBAB+'</td></tr>';
+      '<td class="kebab">'+kebabBtn(allKey(r))+'</td></tr>';
   }).join('');
   document.getElementById('page').innerHTML=
    '<div class="crumb">Applications &rsaquo; '+a.id+'</div>'+
@@ -1212,8 +1345,9 @@ function drawQueue(){
     var s=urg(r), g=null;
     teamGroups(r.appRef).forEach(function(x){ if(x.team===r.team) g=x; });
     var k=refKey(r);
-    return '<tr class="'+(SEL===k?'sel':'')+'" data-row="'+k+'">'+
-      (roundOn()? '<td class="rndcol">'+roundChip(r.round,roundHistoryTip(g))+'</td>':'')+
+    var cls=(SEL===k?'sel ':'')+(isPrio(r)?'prio':'');
+    return '<tr class="'+cls+'" data-row="'+k+'">'+
+      (roundOn()? '<td class="rndcol">'+roundChip(r.round,roundHistoryTip(g,isPrio(r)),isPrio(r))+'</td>':'')+
       '<td class="mono">'+fmt(shift(TODAY,-r.sent))+'</td>'+
       '<td>'+ageCell(s,'state')+'</td>'+
       '<td><span class="appid">'+r.appRef.id+COPY+'</span></td>'+
@@ -1276,7 +1410,7 @@ function drawModal(){
   var prev = roundOn()? priorOfficer(r) : null;
   var rest=Object.keys(MEMBERS).filter(function(n){ return n!==prev && MEMBERS[n].av!=='inactive'; }).sort();
   var head='<div class="modal"><div class="m-head"><span class="m-grip"><i></i><i></i><i></i><i></i><i></i><i></i></span>'+
-    '<span class="m-title">Assign referral'+(roundOn()&&r.round>=2? roundChip(r.round):'')+'</span>'+
+    '<span class="m-title">Assign referral'+(roundOn()&&r.round>=2? roundChip(r.round,'',isPrio(r)):'')+'</span>'+
     '<button class="m-x" data-mclose="1">&times;</button></div>';
   var body='';
   if(prev){
@@ -1329,6 +1463,7 @@ var RVIEW={team:'Landscaping'};
 var ROLE='planner';                 /* planner | specialist */
 var SHUT={};                        /* round number -> collapsed */
 var SECSHUT={};                     /* 'round|party' -> collapsed */
+var RTAB={};                        /* round number -> 'position' | 'conditions' */
 var DRAFT={pos:null, dirty:false, submitted:false, text:'', init:false};
 
 function reviewOf(r){ return REVIEWS[r.appRef.id+'#'+r.team+'#'+r.round]||null; }
@@ -1402,7 +1537,7 @@ function requestList(g,live){
   return '<div class="rq-list">'+desc.map(function(r){
     var cur=(r.round===live.round);
     return '<div class="rq'+(cur?'':' past')+'">'+
-      '<div class="rq-h">'+(roundOn()? roundChip(r.round):'')+
+      '<div class="rq-h">'+(roundOn()? roundChip(r.round,'',isPrio(r)):'')+
       '<span class="rq-t">Referral request</span>'+
       (cur&&roundOn()? '<span class="rq-cur">Current</span>':'')+'</div>'+
       '<div class="rq-x">'+r.req+'</div>'+
@@ -1433,6 +1568,89 @@ function roundSummary(r){
   return '<span class="rnd-sum"><span>'+fmt(shift(TODAY,-r.sent))+'</span></span>';
 }
 
+/* ============================================================
+   CONDITIONS ON A REFERRAL — tab shell only.
+   Conditions applied from a referral response are part of the one
+   application-wide condition set; the tab is an apply point and an
+   attribution, not a second list. The working behaviour — inline
+   placeholder filling, live x/y counts and the completeness gate on
+   'Mark as complete' — is specified and built in the conditions
+   phase 3 prototype. This shows where it attaches on a re-referral
+   thread: per ROUND, so you can see what each round conditioned.
+   ============================================================ */
+var CGRPSHUT={};      /* 'round|group' -> collapsed */
+var CONDS={
+ 'DA215173#Landscaping#3':[
+  {grp:'Part B - Before the issue of a Construction Certificate',
+   title:'Landscape plan to be submitted with the Construction Certificate', type:'Standard', by:'Sean Richards', n:1, f:0},
+  {grp:'Part F - Occupation and ongoing use',
+   title:'Landscape maintenance', type:'Standard', by:'Alicia Prasad', n:1, f:1},
+  {grp:'Part F - Occupation and ongoing use',
+   title:'Retention of the southern boundary planting', type:'Custom', by:'Alicia Prasad', n:0, f:0}
+ ],
+ 'DA215173#Landscaping#2':[
+  {grp:'Part F - Occupation and ongoing use',
+   title:'Landscape maintenance', type:'Standard', by:'Alicia Prasad', n:1, f:1}
+ ],
+ 'DA215173#Environmental Health#2':[
+  {grp:'Part B - Before the issue of a Construction Certificate',
+   title:'Construction Site Management Plan', type:'Standard', by:'Jai Kumar', n:1, f:0},
+  {grp:'Part B - Before the issue of a Construction Certificate',
+   title:'Waste storage and collection', type:'Custom', by:'Jai Kumar', n:0, f:0}
+ ],
+ 'DA215173#Heritage#2':[
+  {grp:'Part A - General conditions',
+   title:'Approved plans and supporting documentation', type:'Mandatory', by:'Anu Ponugoti', n:0, f:0}
+ ]
+};
+function condsOf(r){ return CONDS[r.appRef.id+'#'+r.team+'#'+r.round]||[]; }
+
+function condPane(r,isLive){
+  var list=condsOf(r);
+  var bar='<div class="cbar"><span class="sp"></span>'+
+    (isLive? '<button class="btn-out">+ Apply condition</button>':'')+'</div>';
+  if(!list.length){
+    return bar+'<div class="cond-empty">No conditions have been applied to this referral round.</div>';
+  }
+  var order=[],map={};
+  list.forEach(function(c){ if(!map[c.grp]){ map[c.grp]=[]; order.push(c.grp); } map[c.grp].push(c); });
+  var body=order.map(function(gname){
+    var gk=r.round+'|'+gname, gshut=(CGRPSHUT[gk]===true);
+    return '<div class="cgrp'+(gshut?' shut':'')+'" data-cgrp="'+gk.replace(/"/g,'')+'">'+CHEV+gname+
+      '<span class="cnt">('+map[gname].length+')</span></div>'+
+      (gshut? '' : map[gname].map(function(c){
+        var t = c.type==='Custom'? 'c-cust' : c.type==='Mandatory'? 'c-mand' : 'c-std';
+        var ph = c.n? '<span class="ph'+(c.f<c.n?' out':'')+'">'+c.f+'/'+c.n+'</span>'
+                    : '<span class="dash">&mdash;</span>';
+        return '<div class="crow"><span class="ct">'+c.title+'</span>'+
+          '<span class="chip '+t+'">'+c.type+'</span>'+
+          '<span class="cr">'+person(c.by)+ph+'</span></div>';
+      }).join(''));
+  }).join('');
+  return bar+body+
+    '<div class="cond-foot">Placeholder filling and the completeness gate are demonstrated in the conditions phase 3 prototype. This tab shows where they attach on a re-referral thread.</div>';
+}
+
+/* The words beside the round chip: what state is this round in.
+   Only the live round can be anything other than closed. */
+function roundStateWord(r,isLive){
+  if(!isLive) return 'Complete';
+  if(DRAFT.submitted) return 'Complete';
+  if(r.status==='complete') return 'Complete';
+  if(r.status==='unassigned') return 'Not started';
+  return 'In progress';
+}
+function roundTabs(r){
+  var t=RTAB[r.round]||'position', n=condsOf(r).length;
+  return '<div class="rnd-tabs">'+
+    '<button class="rtab'+(t==='position'?' on':'')+'" data-rtab="'+r.round+'|position">Position</button>'+
+    '<button class="rtab'+(t==='conditions'?' on':'')+'" data-rtab="'+r.round+'|conditions">Conditions ('+n+')</button>'+
+    '</div>';
+}
+function roundPane(r,isLive){
+  return (RTAB[r.round]==='conditions')? condPane(r,isLive) : roundBody(r,isLive);
+}
+
 
 function renderReview(){
   TTREG=[];
@@ -1458,20 +1676,23 @@ function renderReview(){
   var cards=show.map(function(r){
     var isLive=(r.round===live.round);
     var shut = !isLive && SHUT[r.round]!==false;
-    return '<div class="rnd-card '+(isLive?'current':'')+(shut?' shut':'')+'">'+
+    return '<div class="rnd-card '+(isLive?'current':'')+(shut?' shut':'')+(isPrio(r)?' prio':'')+'">'+
       '<div class="rnd-h"'+(isLive?'':' data-round="'+r.round+'"')+'>'+
         (isLive?'':'<svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>')+
-        (roundOn()? roundChip(r.round):'')+
+        (roundOn()? roundChip(r.round,'',isPrio(r)):'')+
         '<span class="rnd-t">'+(roundOn()? 'Round '+r.round : 'Referral')+
-        (isLive?' &middot; current':'')+'</span>'+
+        ' &middot; '+roundStateWord(r,isLive)+'</span>'+
         (isLive? acts : roundSummary(r))+
       '</div>'+
-      '<div class="rnd-b">'+roundBody(r,isLive)+'</div></div>';
+      '<div class="rnd-tabs-wrap">'+roundTabs(r)+'</div>'+
+      '<div class="rnd-b">'+roundPane(r,isLive)+'</div></div>';
   }).join('');
 
+  /* The round chip has come off the team heading. It said the same thing as
+     the chip on the round bar two lines below it, and the team card header
+     is about the TEAM, not about which round you happen to be reading. */
   var head='<div class="rv-head">'+
-    '<span class="rv-team">'+g.team+'</span>'+
-    (roundOn()? roundChip(live.round):'')+'</div>';
+    '<span class="rv-team">'+g.team+'</span></div>';
 
   var kv2=function(k1,v1,k2,v2){
     return '<div class="rkv"><div><div class="k">'+k1+'</div><div class="v">'+v1+'</div></div>'+
@@ -1510,6 +1731,45 @@ function renderReview(){
 }
 
 /* ============================================================
+   ROW ACTION MENU (screen 4)
+   Priority sits here rather than as a row control, because it is an
+   exception a small number of people can make, not a field on the row.
+   Two separate gates:
+     permission  -> the item is not rendered at all
+     status      -> the item is rendered disabled, with the reason,
+                    because the rule is worth teaching where it bites
+   ============================================================ */
+var MENUKEY=null;
+function menuItems(r){
+  var on=isPrio(r), ok=prioEligible(r);
+  var h='<div class="mi" data-mi="review">'+EYE+'Open referral review</div>'+
+        '<div class="mi" data-mi="reassign">'+PEOPLE+'Reassign</div>';
+  if(CANPRIO){
+    h+='<div class="mi-div"></div>';
+    if(ok){
+      h+='<div class="mi'+(on?' red':'')+'" data-mi="prio">'+FLAG+(on?'Remove priority':'Priority')+'</div>';
+    }else{
+      h+='<div class="mi off">'+FLAG+'Priority</div>'+
+         '<div class="mi-note">Available while a referral is not started, not assigned or in progress. This round has already been responded to.</div>';
+    }
+  }
+  h+='<div class="mi-div"></div><div class="mi" data-mi="cancel">'+XICO+'Cancel referral</div>';
+  return h;
+}
+function openMenu(k,btn){
+  var r=refByAllKey(k); if(!r) return;
+  MENUKEY=k;
+  var m=document.getElementById('menu');
+  m.innerHTML=menuItems(r);
+  m.classList.add('on');
+  var b=btn.getBoundingClientRect(), h=m.offsetHeight, w=m.offsetWidth;
+  var top=b.bottom+6; if(top+h>window.innerHeight-12) top=Math.max(12,b.top-h-6);
+  var left=b.right-w; if(left<12) left=12;
+  m.style.top=top+'px'; m.style.left=left+'px';
+}
+function closeMenu(){ MENUKEY=null; document.getElementById('menu').classList.remove('on'); }
+
+/* ============================================================
    SCREEN SWITCH + EVENTS
    ============================================================ */
 function renderScreen(){
@@ -1518,6 +1778,8 @@ function renderScreen(){
   var navMap={dash:'dash',apps:'apps',ov:'apps',all:'all',review:'all',inbox:'inbox'};
   document.getElementById('grp-role').classList.toggle('hidden',SCREEN!=='review');
   document.getElementById('grp-req').classList.toggle('hidden',SCREEN!=='review');
+  document.getElementById('grp-prio').classList.toggle('hidden',SCREEN!=='all');
+  closeMenu();
   document.querySelectorAll('.sidebar-item[data-nav]').forEach(function(b){
     b.classList.toggle('active', navMap[SCREEN]===b.dataset.nav);
   });
@@ -1548,6 +1810,11 @@ document.getElementById('seg-role').addEventListener('click',function(e){
   b.classList.add('on'); ROLE=b.dataset.role;
   DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false}; renderReview();
 });
+document.getElementById('seg-prio').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#seg-prio button').forEach(function(x){x.classList.remove('on');});
+  b.classList.add('on'); CANPRIO=(b.dataset.prio==='1'); closeMenu();
+});
 document.getElementById('seg-mode').addEventListener('click',function(e){
   var b=e.target.closest('button'); if(!b) return;
   document.querySelectorAll('#seg-mode button').forEach(function(x){x.classList.remove('on');});
@@ -1559,6 +1826,28 @@ document.querySelectorAll('.sidebar-item[data-nav]').forEach(function(b){
   });
 });
 document.addEventListener('click',function(e){
+  /* menu first: the kebab sits inside a row that would otherwise open the rail */
+  var mb=e.target.closest('[data-menu]');
+  if(mb){ if(MENUKEY===mb.dataset.menu) closeMenu(); else openMenu(mb.dataset.menu,mb); return; }
+  var mi=e.target.closest('#menu .mi');
+  if(mi){
+    var act=mi.dataset.mi; if(!act) return;          /* disabled item: no-op, menu stays open */
+    var mr=refByAllKey(MENUKEY); closeMenu(); if(!mr) return;
+    if(act==='prio'){
+      var pk=prioKey(mr);
+      if(PRIO[pk]){ delete PRIO[pk]; toast(TICK+'<span>Priority removed from <b>'+mr.team+'</b> round '+mr.round+'</span>'); }
+      else       { PRIO[pk]=true;    toast(TICK+'<span><b>'+mr.team+'</b> round '+mr.round+' marked <b>priority</b></span>'); }
+      renderScreen(); return;
+    }
+    if(act==='review'){
+      RVIEW.team=mr.team; SHUT={}; SECSHUT={}; RTAB={};
+      DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
+      SHUT[mr.round]=false; closePanel(); setScreen('review'); return;
+    }
+    toast(TICK+'<span>Not wired in this concept</span>'); return;
+  }
+  if(MENUKEY && !e.target.closest('#menu')) closeMenu();
+
   var u=e.target.closest('[data-undo]');
   if(u){ if(LAST){ LAST.r.status='unassigned'; LAST.r.assigned=null; LAST.r.assignedBy=null;
                    if(MEMBERS[LAST.name]) MEMBERS[LAST.name].open--; LAST=null; renderScreen(); }
@@ -1570,15 +1859,19 @@ document.addEventListener('click',function(e){
   if(e.target.id==='mask'){ closeModal(); return; }
   if(e.target.closest('#btn-assign')){ openModal(); return; }
   var trv=e.target.closest('[data-toreview]');
-  if(trv){ RVIEW.team=trv.dataset.toreview; SHUT={}; SECSHUT={};
+  if(trv){ RVIEW.team=trv.dataset.toreview; SHUT={}; SECSHUT={}; RTAB={};
            DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
            if(trv.dataset.atround) SHUT[+trv.dataset.atround]=false;   /* land on the round you picked */
            closePanel(); setScreen('review'); return; }
   var arw=e.target.closest('[data-refrow]');
   if(arw){ openAllPanel(arw.dataset.refrow); return; }
   var orv=e.target.closest('[data-openreview]');
-  if(orv){ RVIEW.team=orv.dataset.openreview; SHUT={}; SECSHUT={}; DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
+  if(orv){ RVIEW.team=orv.dataset.openreview; SHUT={}; SECSHUT={}; RTAB={}; DRAFT={pos:null,dirty:false,submitted:false,text:'',init:false};
            setScreen('review'); return; }
+  var cg=e.target.closest('[data-cgrp]');
+  if(cg){ var ck=cg.dataset.cgrp; CGRPSHUT[ck]=(CGRPSHUT[ck]!==true); renderReview(); return; }
+  var rtb=e.target.closest('[data-rtab]');
+  if(rtb){ grabEditor(); var rp=rtb.dataset.rtab.split('|'); RTAB[+rp[0]]=rp[1]; renderReview(); return; }
   var pt=e.target.closest('[data-party]');
   if(pt){ grabEditor(); var k=pt.dataset.party; SECSHUT[k]=(SECSHUT[k]!==true); renderReview(); return; }
   var rh=e.target.closest('.rnd-h[data-round]');
@@ -1600,7 +1893,8 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
-    if(document.getElementById('mask').classList.contains('on')) closeModal();
+    if(MENUKEY) closeMenu();
+    else if(document.getElementById('mask').classList.contains('on')) closeModal();
     else closePanel();
   }
 });
@@ -1619,22 +1913,30 @@ kp.innerHTML=
  '<div class="key-h">Urgency &mdash; aggregate cell on an application row</div>'+
  chipRow('st-notstarted','','Not started (2)','No team has responded yet; none inside a warning window.')+
  chipRow('st-progress',PLAY,'In progress (2/6)','Some teams done; none inside a warning window.')+
- chipRow('st-soon',CLOCK,'In progress (2/6)','At least one team due soon. Clock icon, orange outline.')+
- chipRow('st-today',CIRC,'In progress (2/6)','At least one team due today.')+
- chipRow('st-overdue',TRI,'In progress (2/6)','At least one team overdue. Warning triangle, red outline.')+
+ chipRow('st-soon',CLOCK,'In progress (2/6)','At least one team due soon. Clock icon.')+
+ chipRow('st-today',CIRC,'In progress (2/6)','At least one team due today. Filled circle.')+
+ chipRow('st-overdue',TRI,'In progress (2/6)','At least one team overdue. Warning triangle.')+
  chipRow('st-complete',TICK,'Complete (6/6)','Every team has responded or closed.')+
+ '<div class="key-row"><span style="color:var(--ink-med);font-weight:600">Subdued, phase 4</span><span>These chips previously carried a coloured outline and a heavier weight on top of a saturated fill &mdash; three signals for one state, on screens where most rows are not urgent. The outline is gone and the fills are lighter. The <b>icon</b> now separates due soon, due today and overdue, which is also the only part that survives for a colour-blind reader.</span></div>'+
  '<div class="key-h" style="margin-top:12px">Urgency &mdash; referral row: the age carries it</div>'+
  ageRow('','','9 days','Inside KPI, outside the warning window. No icon.')+
  ageRow('ag-soon',CLOCK,'13 days','Due soon &mdash; inside that team&rsquo;s warning window.')+
  ageRow('ag-today',CIRC,'14 days','Due today.')+
  ageRow('ag-overdue',TRI,'20 days','Overdue.')+
  '<div class="key-h" style="margin-top:12px">Round &mdash; the re-referral signal</div>'+
- '<div class="key-row"><span>'+roundChip(3)+'</span><span>The 3rd time this application has been referred to this team. Indigo from round 2 up &mdash; deliberately not green, because green means done or supported.</span></div>'+
- '<div class="key-row"><span>'+roundChip(1)+'</span><span>First referral. Neutral on every screen.</span></div>'+
+ '<div class="key-row"><span>'+roundChip(1)+' '+roundChip(2)+' '+roundChip(3)+' '+roundChip(4)+'</span>'+
+ '<span>How many times this application has been referred to this team. A <b>monotone ramp</b>, not a hue: round is an ordinal, so the chip gets heavier rather than changing meaning, and it spends no colour that urgency, position or status needs. Ink flips to white at round 4 &mdash; the point where the escalation should be uncomfortable to look at. Round 5 and beyond hold at the darkest step.</span></div>'+
  '<div class="key-row"><span>Hover a chip</span><span>Every prior round: date, officer, position.</span></div>'+
+ '<div class="key-h" style="margin-top:12px">Priority &mdash; the manual override</div>'+
+ '<div class="key-row"><span>'+roundChip(3,'',true)+'</span><span>A priority referral turns its <b>round chip red</b>, with hovertext <i>&ldquo;This referral is a priority&rdquo;</i>. Asserted by a person, not derived: urgency answers <i>how late is it</i>; priority says <i>work this one next</i> regardless of the clock. Marked from the row menu on screen 4 and shown on every screen the round appears on.</span></div>'+
+ '<div class="key-row"><span style="color:var(--ink-med);font-weight:600">What red costs</span><span>Red overrides the grey ramp, so a flagged referral trades <i>how many times have we been here</i> for <i>work this first</i>. The number is still there; the escalation reading is not. That is the trade, taken knowingly.</span></div>'+
+ '<div class="key-row"><span style="color:var(--ink-med);font-weight:600">Why the row edge stays</span><span>The Round column is dropped in the <i>Today</i> and <i>Urgency</i> views, so the red chip has nothing to colour there. The red bar down the row edge and the faint tint carry priority in all three modes. Urgency, by contrast, colours a chip and an icon <i>inside</i> the row \u2014 different mechanisms, so a referral that is both overdue and priority still reads as two facts rather than one louder one.</span></div>'+
+ '<div class="key-row"><span style="color:var(--ink-med);font-weight:600">Two gates</span><span><b>Permission</b> &mdash; without it the menu item is not rendered at all (toggle it in the control bar on screen 4). <b>Status</b> &mdash; available only while a referral is not started, not assigned or in progress; once responded to, the item is shown disabled with the reason, because that is where the rule needs explaining.</span></div>'+
  '<div class="key-h" style="margin-top:12px">Referral review &mdash; screen 6</div>'+
  '<div class="key-row"><span>One thread per team</span><span>The live round is editable by whichever party you are viewing as; every earlier round stays on the page, collapsed and read-only.</span></div>'+
  '<div class="key-row"><span>Collapsible throughout</span><span>Each round collapses, and within a round the planner review and specialist response collapse independently.</span></div>'+
+ '<div class="key-row"><span>Position / Conditions</span><span>Tabs sit directly beneath each round heading, matching the conditions phase 3 prototype, and are held <b>per round</b> &mdash; so you can read what each round conditioned. The Conditions tab is a shell here: inline placeholder filling, live x/y counts and the completeness gate on <i>Mark as complete</i> are built in that prototype, not this one.</span></div>'+
+ '<div class="key-row"><span>Round heading</span><span>Reads <i>Round 3 &middot; In progress</i>. The round chip has come off the team heading &mdash; it repeated the chip on the round bar two lines below, and the team card header is about the team, not about which round you are reading.</span></div>'+
  '<div class="key-row"><span><span class="posbtn sel" style="padding:3px 8px;font-size:10px">Supported</span></span><span>A selected position takes its own colour &mdash; green only ever means Supported.</span></div>'+
  '<div class="key-f">'+
  '<b>How the two fit together.</b> One referral record per round. Urgency answers <i>how late is it</i>; round answers <i>how many times have we seen it</i>. '+
